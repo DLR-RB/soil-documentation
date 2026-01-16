@@ -121,3 +121,6 @@ There are currently three different message types defined:
 
 These messages are described in more detail in [Messages.md](Messages.md).
 
+#### Access control
+
+The main principles and recommendations for access control are compiled [here](Access%20control.md).
