@@ -16,7 +16,7 @@ There are currently three different message types defined:
 | Type                                | Usage                                |
 |:------------------------------------|:-------------------------------------|
 | [Value message](#value-message)     | Transmit values for paths            |
-| [Data request](#request-message)         | Request values, create subscriptions |
+| [Data request](#request-message)    | Request values, create subscriptions |
 | [History request](#history-request) | Request historic values for paths    |
 
 ### Value message
@@ -50,12 +50,15 @@ There is also often no need to handle type sizes (like `Int32` or `UInt8`) withi
 Value messages are used as responses to requests (described below).
 Each request can produce an arbitrary number of responses (including zero).
 If a request includes a `request` field, then this value should be contained in the corresponding responses, if supported by the component.
-Responses should also include a `count` of all messages generated for the request, so that the receiving component can determine the completion of a request.
+Responses to data or history requests should also include a `count` of all messages generated for the request, so that the receiving component can determine the completion of a request.
+If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
+If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
 
 #### Acknowledgements
 
 It possible to use value messages as acknowledgements, should this functionality be absolutely required (the transport layer is assumed to deliver all messages).
-If a component receives a value message containing a `request` field that is not a response to a request made by itself, then it should respond with a value message containing the `path` of the received message, with the `time` field set to the current time. The `value` and `samples` fields should be left empty.
+If a component receives a value message containing a `request` field that is not a response to a request made by itself, then it should respond with a value message containing the `path` of the received message, with the `time` field set to the current time.
+The `value` and `samples` fields should be left empty.
 
 ### Data request message
 
@@ -64,7 +67,7 @@ These requests can concern a single value, but can also target a larger section 
 
  > Note: Not all components may support request messages. If requests are not supported, then the messages will simply be ignored.
 
-A request message has the following fields:"
+A request message has the following fields:
 
 | Field       | Type                 | Description                                                                                          |
 |:------------|:---------------------|:-----------------------------------------------------------------------------------------------------|
@@ -74,7 +77,11 @@ A request message has the following fields:"
 | `time`      | `Optional<Date>`     | The point in time of the requested path. Current time is assumed if omitted.                         |
 | `request`   | `Optional<Int>`      | The request id to identify the response(s)                                                           |
 
-If `request` is present in the message, then components are expected to include the same value in all responses related to this request, except for future updates due to subscriptions. Additionally, the `count` field my be set by the components for each response, to allow the requesting component to track that all responses have been received.
+If `request` is present in the message, then components are expected to include the same value in all responses related to this request, except for future updates due to subscriptions.
+
+Additionally, the `count` field may be set by the components for each response, to allow the requesting component to track that all responses have been received.
+If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
+If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
 
 #### Single value requests
 
@@ -90,10 +97,22 @@ If the `request` field is present, then components should respond with at least 
 If no data is available for the request, then the requested path should be sent without any `value` or `samples`.
 The response may include a timestamp to indicate when the response was created.
 
+The `count` property can be set in responses to value requests if `request` is set, to indicate the total number of messages being sent.
+If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
+If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
+
 #### Subscription requests
 
-If the `subscribe` property is set to `true`, then the component is requested to respond with the current values (see [single value requests](#single-value-requests)), and with all changes to those paths in the future.
-The `depth` property has the same meaning as for single value requests.
+If the `subscribe` property is set to `true`, then the component is requested to send all future changes to those paths using [value messages](#value-message), and with all changes to those paths in the future.
+The component is not expected to respond with the current values.
+If the `request` field is set in the request, then the component may respond with an empty [value message](#value-message) containing the received path and request id.
+
+The `depth` property has the same meaning as for [single value requests](#single-value-requests).
+
+#### Unsubscribing
+
+To cancel a subscription, send a request message with `subscribe` set to `false`, using the same `path` and `depth` as the original subscription.
+If `request` is set, then the component should respond with an empty [value message](#value-message) containing the path and request id.
 
 #### Exclusion requests
 
@@ -101,6 +120,8 @@ Subscribing to a sub-tree may cause unnecessary updates, so it is also possible 
 This is done by sending a request message with `subscribe` set to `false`, indicating to the receiver that the specified sub-tree should be excluded.
 This exclusion mechanism can be used together with subscriptions to create fine-grained update strategies.
 For more information, see the [subscriptions document](subscriptions.md).
+
+The component also responds with a value message if the `request` field is set, consistent with [subscription requests](#subscription-requests).
 
 ### History request
 
@@ -130,6 +151,9 @@ This holds true even if `start` is later than `end`, meaning that the `limit` ne
 
 Note that `start` is treated as exclusive, while `end` is inclusive.
 This has been choosen so that clients can continue their queries from the last available sample.
+
+If the `request` field is set, then the component receiving the request should include it in all messages being sent as a response,
+including a `count` stating the number of messages being sent.
 
 #### Response order
 

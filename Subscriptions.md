@@ -40,3 +40,11 @@ This process follows some simple rules:
 - Lower-level rules override higher level rules (an exclusion for `a.b` overrides a subscription for `a`)
 - Newer rules override older rules for the same path and action (e.g. subscribing to `a.b` with `depth = 1` after subscribing with `depth = 2`)
 - Subscriptions and exclusions can exist for the same path, if they have different depths (e.g. subscribing to all of `a`, but excluding `a` with `depth = 1`)
+
+## Responses to subscription requests
+
+The component receiving the subscription and exclusion requests will only respond to the request if the `request` field is set,
+in which case it sends an empty value message with the received path and request id.
+Other messages are only sent when new data arrives.
+
+The current values at the time of the subscription will not be transmitted automatically, but can be requested separately (note that exclusions are not considered when requesting trees).
