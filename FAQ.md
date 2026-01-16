@@ -57,3 +57,10 @@ Components can be queried for the states they contain.
 The structure can be retrieved via request messages.
 If you want the full tree, simply send a request for the root path (without a `depth` indicator), and the component will respond with the full tree, including all current values.
 You can also discover the tree iteratively by restricting the depth of the response or querying subpaths.
+
+#### Shouldn't a component respond to a subscription with the current values?
+
+That's a mechanism that was considered, but it was decided against it.
+- It adds more complexity for whole protocol
+- A component may want to construct more elaborate subscriptions without receiving many unnecessary values
+- Current values can be requested separately
