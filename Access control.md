@@ -72,3 +72,9 @@ canWrite(component: ComponentId, path: Path, time: Timestamp, wasRequested: Bool
 canRead(component: ComponentId, path: Path, time: Timestamp) -> Bool
 canReadHistory(component: ComponentId, path: Path, start: Timestamp, end: Timestamp) -> Range<Timestamp>?
 ```
+
+## Access data storage
+
+A SOIL database may be used to store the data related to access control.
+It's possible to store access rights (roles, permissions) in a custom structure,
+either as part of the main database (properly restricted), or in a separate storage.

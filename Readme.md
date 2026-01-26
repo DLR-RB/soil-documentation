@@ -124,3 +124,7 @@ These messages are described in more detail in [Messages.md](Messages.md).
 #### Access control
 
 The main principles and recommendations for access control are compiled [here](Access%20control.md).
+
+#### Security considerations
+
+A short summary of security concepts and attacks related to SOIL can be found in [Security.md](Security.md).
