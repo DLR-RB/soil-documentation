@@ -9,37 +9,38 @@ With this mechanism, components can build complex include/exclude rules to manag
 
 ## Creating subscriptions
 
-Components can subscribe to sub-trees of the data, based on the paths.
-A subscription to the path `a.b` will provide the component with updates to this path, as well as all paths contained within `a.b`, like `a.b.c`, or `a.b.e.f`.
-A subscriber will not receive updates outside of the subscription, e.g. for `a`, `a.c`, or `a.c.b`.
+Subscriptions are created by sending an `inclusion` or `exclusion` request to a component with a new subscription id.
+
+### Inclusions
+
+Components can request to include sub-trees of the data, based on the paths.
+An inclusion of the path `a.b` will provide the component with updates to this path, as well as all paths contained within `a.b`, like `a.b.c`, or `a.b.e.f`.
+A subscriber will not receive updates outside of the inclusion, e.g. for `a`, `a.c`, or `a.c.b`.
+
+### Exclusions
+
+Conversely, exclusions specify which paths to ignore for the subscription.
+The mechanism works similar to inclusions.
+If a component includes `a`, but excludes `a.b`, then it will receive updates for `a`, and `a.c`, but not for `a.b` or `a.b.c`.
 
 ### Subscription depth
 
-It's possible to specify a `depth` of the subscription, which will limit the number of path components below the subscribed path that are considered.
-A component subscribing to `a` with `depth = 1` will receive updates to `a`, `a.b`, and `a.c`, but not for `a.b.c`.
-A depth of `0` will only provide updates for the specified path, but no sub-elements of it.
-If no depth is specified, then all updates to the sub-tree of the path will be published.
-
-### Ignoring updates (exclusions)
-
-In addition to subscribing for updates, it's also possible to ignore sub-trees within a subscription.
-The mechanism works similar to subscriptions with an optional `depth`, but limits existing subscriptions.
-If a component subscribes to `a`, but excludes `a.b`, then it will receive updates for `a`, and `a.c`, but not for `a.b` or `a.b.c`.
+It's possible to specify a `depth` for inclusions and exclusions, which will limit the number of path components below the specified path that are considered.
+A component including `a` with `depth = 1` will receive updates to `a`, `a.b`, and `a.c`, but not for `a.b.c`.
+A depth of `0` will only target the exact path, but no sub-elements of it.
+If no depth is specified, then the whole sub-tree of the path will be considered.
 
 ### Composing subscriptions
 
 Combining subscriptions and exclusions allows the creation of complex requests tailored to the needs of the component, while minimizing data transfer and processing.
 
-## Update applicability
-
-The subscriptions and exclusions are used to determine whether an update to a path is of interest to a component.
-
-This process follows some simple rules:
-- Exclusions override subscriptions (subscribing to `a.b` and excluding `a.b` will exclude it)
+Inclusions and exclusions can be combined according to some simple rules:
 - The path is traversed from bottom to top (evaluting `a.b.c` before `a.b` before `a`)
-- Lower-level rules override higher level rules (an exclusion for `a.b` overrides a subscription for `a`)
-- Newer rules override older rules for the same path and action (e.g. subscribing to `a.b` with `depth = 1` after subscribing with `depth = 2`)
-- Subscriptions and exclusions can exist for the same path, if they have different depths (e.g. subscribing to all of `a`, but excluding `a` with `depth = 1`)
+- Lower-level rules override higher level rules (an exclusion for `a.b` overrides the inclusion of `a`)
+- Shallower depths override higher depths (an inclusion of `a.b` with `depth = 1` overrides an exclusion with `depth = 2`)
+- Exclusions override inclusions with the same depth (including `a.b` and excluding `a.b` will exclude it)
+
+> Multiple inclusions and exclusions can exist for the same path (e.g. including to all of `a`, but excluding `a` with `depth = 1`)
 
 ## Responses to subscription requests
 

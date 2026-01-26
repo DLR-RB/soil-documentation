@@ -9,19 +9,97 @@ To support these scenarios, the messages must be:
 - independent (only implement required functionality)
 - primitive (few fields, low complexity)
 
-## Message types
+### Notes
 
-There are currently three different message types defined:
+The message structures in this document are only described conceptually.
+SOIL doesn't define the exact arrangement, identification or encoding of the messages.
+Check specific implementations for details on these aspects.
 
-| Type                                | Usage                                |
-|:------------------------------------|:-------------------------------------|
-| [Value message](#value-message)     | Transmit values for paths            |
-| [Data request](#request-message)    | Request values, create subscriptions |
-| [History request](#history-request) | Request historic values for paths    |
+There are currently these different message types defined:
 
-### Value message
+| Type                                     | Usage                              |
+|:-----------------------------------------|:-----------------------------------|
+| [Data message](#data-message)            | Transmit samples for paths         |
+| [Request message](#request-message)      | Request samples, including history |
+| [Subscription inclusion](#subscriptions) | Include a path in a subscription   |
+| [Subscription exclusion](#subscriptions) | Exclude a path from a subscription |
+| [Subscription deletion](#subscriptions)  | Delete a subscription              |
 
-The simplest and most common message type is used to transfer data, in the form of values associated with paths.
+## Core functionality
+
+At the most basic level, a SOIL component only does two things: Transmit and receive data.
+Consequently, there are only two messages required to perform these functions.
+
+### Sending data
+
+At an abstract level, the data sent to a receiver contains:
+- The `path` of the transmitted data in the data tree
+- A list of `samples` with the timestamped values for the path
+
+A simple message would therefore look like this:
+
+```json
+{
+    "path" : ["sensor", "temperature"],
+    "samples" : [
+        {
+            "value" : 14.3,
+            "timestamp" : 1769422796.19203
+        }
+    ]
+}
+```
+
+Data messages are used to transmit new or historic values of paths.
+Single `value`s are usually transmitted based on subscriptions, or shared unrequested by a data producer.
+
+
+
+### Single value messages
+
+In most systems, the majority of transmissions will only contain a single sample,
+which merits the addition of more fields to simplify messages in those cases:
+- A `value` field at the top level for the singular value
+- An optional `timestamp` field at the top level for the timestamp of the value
+
+A single-value message can therefore be simply:
+
+```json
+{
+    "path" : ["sensor", "temperature"],
+    "value" : 14.3,
+    "timestamp" : 1769422796.19203
+}
+```
+
+If the sender of a value wants the receiver to treat the value as belonging to the current time,
+then the `timestamp` can be omitted (e.g. when a sensor has no suitable clock).
+In this case the message is simply:
+
+```json
+{
+    "path" : ["sensor", "temperature"],
+    "value" : 14.3
+}
+```
+
+### Responses
+
+In the above case the message was being sent without a request, e.g. because a sensor measured a new value.
+Data messages may also be sent as a response to some request for data, e.g. querying a database.
+In this case, the requestor may want to know which request the data messages belong to.
+We therefore add two more optional fields to data messages:
+- A `request` id that matches an id in the request that this message responds to.
+- A `count` that indicates how many total messages will be sent in response to the request.
+
+If a request includes a `request` field, then this value should be contained in the corresponding responses, if supported by the component.
+Responses to data or history requests should also include a `count` of all messages generated for the request, so that the receiving component can determine the completion of a request.
+If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
+If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
+
+### Data message
+
+All possible fields in a data message can be found in the following table.
 
 A value message has the following fields:
 
@@ -34,25 +112,10 @@ A value message has the following fields:
 | `request` | `Optional<Int>`           | The request id to which this message is a response                                          |
 | `count`   | `Optional<Int>`           | An optional number stating the total number of responses sent for the request               |
 
-Value messages are used to transmit new or historic values of paths.
-Single `value`s are usually transmitted based on subscriptions, or shared unrequested by a data producer.
-
-The simplest message to provide data (e.g. by sensors) only contains the `path` and a `value`.
-It is therefore very easy to adapt simple devices and inject data into the system.
-
 Note that `value` has the unspecified type `Value`. The abstract SOIL concept does not specify which types of values the system handles.
 Some use cases may call for highly specific types, while others may just use basic types like integers, doubles, and strings.
 It is recommended to keep the types as primitive as possible, to keep the complexity of the implementations low.
 There is also often no need to handle type sizes (like `Int32` or `UInt8`) within SOIL, since those are mostly restrictions for transmissions and storage, which don't apply to SOIL.
-
-#### Responses
-
-Value messages are used as responses to requests (described below).
-Each request can produce an arbitrary number of responses (including zero).
-If a request includes a `request` field, then this value should be contained in the corresponding responses, if supported by the component.
-Responses to data or history requests should also include a `count` of all messages generated for the request, so that the receiving component can determine the completion of a request.
-If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
-If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
 
 #### Acknowledgements
 
@@ -63,84 +126,30 @@ The `value` and `samples` fields should be left empty.
 ### Data request message
 
 The second message type is used to request data from another component.
-These requests can concern a single value, but can also target a larger section of the path tree, and are also used to create and manage subscriptions to paths.
+These requests can concern a single value, but can also target a larger section of the path tree, and are also used to query historic data.
+Each request can produce an arbitrary number of responses (including zero).
 
  > Note: Not all components may support request messages. If requests are not supported, then the messages will simply be ignored.
 
 A request message has the following fields:
 
-| Field       | Type                 | Description                                                                                          |
-|:------------|:---------------------|:-----------------------------------------------------------------------------------------------------|
-| `path`      | `Array<String>`      | The path to be requested.                                                                            |
-| `depth`     | `Optional<Int>`      | The number of levels below the path to include. All values of the sub-tree are requested if omitted. |
-| `subscribe` | `Optional<Bool>`     | Omitted to request a single value. If `true`, then a subscription is established. If `false`, then the sub-tree is excluded from the subscriptions. |
-| `time`      | `Optional<Date>`     | The point in time of the requested path. Current time is assumed if omitted.                         |
-| `request`   | `Optional<Int>`      | The request id to identify the response(s)                                                           |
-
-If `request` is present in the message, then components are expected to include the same value in all responses related to this request, except for future updates due to subscriptions.
-
-Additionally, the `count` field may be set by the components for each response, to allow the requesting component to track that all responses have been received.
-If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
-If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
+| Field     | Type             | Description                                                                                          |
+|:----------|:-----------------|:-----------------------------------------------------------------------------------------------------|
+| `path`    | `Array<String>`  | The path to be requested.                                                                            |
+| `start`   | `Optional<Date>` | The start date of the interval (exclusive). Beginning of time is assumed if omitted.                 |
+| `end`     | `Optional<Date>` | The end date of the interval (inclusive). End of time is assumed if omitted                          |
+| `limit`   | `Optional<Int>`  | The maximum number of samples to include for each node in the tree. All matching samples are returned if omitted. |
+| `depth`   | `Optional<Int>`  | The number of levels below the path to include. All values of the sub-tree are requested if omitted. |
+| `request` | `Optional<Int>`  | The request id to identify the response(s)                                                           |
 
 #### Single value requests
 
-The `subscribe` property is omitted to get the current value of a path (or all values of a sub-tree).
-If `depth` is set to `0`, then the component should only return the value for the exact `path` provided.
+If `depth <= 0`, then the component should only return the value for the exact `path` provided.
 If `depth` is set to `nil`, then the full sub-tree below (and including) `path` is requested.
 If `depth` is set to a positive value, then the specified number of levels below `path` are also requested.
 If the path `a, b` is requested with a depth of `1`, then `a, b, c` should also be returned, but not `a, b, c, d`.
 
 If a `time` is specified, then the newest values at or before the given date should be returned.
-
-If the `request` field is present, then components should respond with at least one message.
-If no data is available for the request, then the requested path should be sent without any `value` or `samples`.
-The response may include a timestamp to indicate when the response was created.
-
-The `count` property can be set in responses to value requests if `request` is set, to indicate the total number of messages being sent.
-If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
-If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
-
-#### Subscription requests
-
-If the `subscribe` property is set to `true`, then the component is requested to send all future changes to those paths using [value messages](#value-message), and with all changes to those paths in the future.
-The component is not expected to respond with the current values.
-If the `request` field is set in the request, then the component may respond with an empty [value message](#value-message) containing the received path and request id.
-
-The `depth` property has the same meaning as for [single value requests](#single-value-requests).
-
-#### Unsubscribing
-
-To cancel a subscription, send a request message with `subscribe` set to `false`, using the same `path` and `depth` as the original subscription.
-If `request` is set, then the component should respond with an empty [value message](#value-message) containing the path and request id.
-
-#### Exclusion requests
-
-Subscribing to a sub-tree may cause unnecessary updates, so it is also possible to exclude sub-trees within subscriptions from being published.
-This is done by sending a request message with `subscribe` set to `false`, indicating to the receiver that the specified sub-tree should be excluded.
-This exclusion mechanism can be used together with subscriptions to create fine-grained update strategies.
-For more information, see the [subscriptions document](subscriptions.md).
-
-The component also responds with a value message if the `request` field is set, consistent with [subscription requests](#subscription-requests).
-
-### History request
-
-A history request is conceptually similar to a single value request, but instead of requesting the current value, it instructs the receiver to send historic values for the path within an interval.
-
- > Note: Not all components may support history requests. If not supported, then the messages will simply be ignored.
-
-A history request message has the following fields:
-
-| Field     | Type             | Description                                                                          |
-|:----------|:-----------------|:-------------------------------------------------------------------------------------|
-| `path`    | `Array<String>`  | The path for which history is requested                                              |
-| `start`   | `Optional<Date>` | The start date of the interval (exclusive). Beginning of time is assumed if omitted. |
-| `end`     | `Optional<Date>` | The end date of the interval (inclusive). End of time is assumed if omitted          |
-| `limit`   | `Optional<Int>`  | The maximum number of values to transmit                                             |
-| `request` | `Optional<Int>`  | The request id to identify the response(s)                                           |
-
-Components that support history requests should respond with [value messages](#value-message) containing the requested samples.
-The samples may arrive through individual messages (via `value`), or as batches using `samples`.
 
 #### Range intervals and limiting
 
@@ -148,6 +157,7 @@ Depending how (and if) `start` and `end` are specified, the component is expect 
 In general, values are returned from `start` to `end`, until the optional `limit` is reached.
 If `start` is not specified, then beginning of time is assumed, and if `end` is omitted, then end of time is assumed.
 This holds true even if `start` is later than `end`, meaning that the `limit` newest samples will be returned.
+If an `end` but no `start` is specified, then `limit` will apply to the *newest* samples.
 
 Note that `start` is treated as exclusive, while `end` is inclusive.
 This has been choosen so that clients can continue their queries from the last available sample.
@@ -157,8 +167,54 @@ including a `count` stating the number of messages being sent.
 
 #### Response order
 
-The components are not required to respond with the samples in any particular order (this may also not be guaranteed by the transport layer),
-but it is recommended to send them from `start` to `end`.
+The components are not strictly required to respond with the samples in any particular order, and are also free to split the responses into an arbitrary number of messages.
+It is recommended to use a fixed batch size, and to sort the `samples` within the messages in the expected order (mostly from `start` to `end`).
+
+#### Request identification
+
+If `request` is present in the message, then components are expected to include the same value in all responses related to this request.
+Additionally, the `count` field may be set by the components for each response, to allow the requesting component to track that all responses have been received.
+If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
+If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
+
+If the `request` field is present, then components should respond with at least one message.
+If no data is available for the request, then the requested path should be sent without any `value` or `samples`.
+The response may include a timestamp to indicate when the response was created.
+
+The `count` property can be set in responses to value requests if `request` is set, to indicate the total number of messages being sent.
+If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
+If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
+
+### Subscriptions
+
+Subscriptions are an optional SOIL feature to request continous updates from components when new values at specified paths are available.
+Establishing and managing subscriptions is done with a separate set of messages, while the actual data updates use the [data messages](#data-message) defined above.
+
+> Subscriptions are an optional feature not supported by all components. Subscription messages are ignored if not supported.
+
+Subscriptions define areas of the data tree that the component is interested in.
+This is done by including or excluding sub-trees with an optional depth, to construct the desired subscription pattern.
+There are three operations:
+- Include a sub-tree in the subscription
+- Exclude a sub-tree from the subscription
+- Delete the entire subscription
+
+Including and excluding paths will create the subscription, if it doesn't exist yet.
+
+Subscriptions are configured per component, meaning that each component can establish individual subscriptions.
+Each subscription is identified by an integer id, which can be used to update or delete the subscription later.
+
+Both messages for inclusion and exclusion have the following fields:
+
+| Field          | Type            | Description                                    |
+|:---------------|:----------------|:-----------------------------------------------|
+| `subscription` | `Int`           | The id of the subscription to create or modify |
+| `path`         | `Array<String>` | The path to include or exclude                 |
+| `depth`        | `Optional<Int>` | The number of levels below the path to target. The full tree below the path is included/excluded if omitted |
+
+A message deletion request only contains a `subscription` field.
+
+For a more detailed description of the features, see [subscriptions](Subscriptions.md).
 
 ## Message implementations
 
