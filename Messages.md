@@ -204,6 +204,10 @@ Including and excluding paths will create the subscription, if it doesn't exist 
 Subscriptions are configured per component, meaning that each component can establish individual subscriptions.
 Each subscription is identified by an integer id, which can be used to update or delete the subscription later.
 
+For a more detailed description of the features, see [subscriptions](Subscriptions.md).
+
+#### Subscription rules
+
 Both messages for inclusion and exclusion have the following fields:
 
 | Field          | Type            | Description                                    |
@@ -212,9 +216,17 @@ Both messages for inclusion and exclusion have the following fields:
 | `path`         | `Array<String>` | The path to include or exclude                 |
 | `depth`        | `Optional<Int>` | The number of levels below the path to target. The full tree below the path is included/excluded if omitted |
 
-A message deletion request only contains a `subscription` field.
+#### Deleting subscriptions
 
-For a more detailed description of the features, see [subscriptions](Subscriptions.md).
+A subscription deletion request can be used to remove all inclusion and exclusion rules of a subscription in a subtree.
+
+| Field          | Type            | Description                                     |
+|:---------------|:----------------|:------------------------------------------------|
+| `subscription` | `Int`           | The id of the subscription to modify            |
+| `path`         | `Array<String>` | The path for which to delete subscription rules |
+| `depth`        | `Optional<Int>` | The number of levels below the path to target. `nil` indicates that all rules at and below the path should be deleted |
+
+To completely remove all subscriptions, issue a request with an empty path (the root path) and no depth (`nil`).
 
 ## Message implementations
 
