@@ -17,13 +17,14 @@ Check specific implementations for details on these aspects.
 
 There are currently these different message types defined:
 
-| Type                                     | Usage                              |
-|:-----------------------------------------|:-----------------------------------|
-| [Data message](#data-message)            | Transmit samples for paths         |
-| [Request message](#request-message)      | Request samples, including history |
-| [Subscription inclusion](#subscriptions) | Include a path in a subscription   |
-| [Subscription exclusion](#subscriptions) | Exclude a path from a subscription |
-| [Subscription deletion](#subscriptions)  | Delete a subscription              |
+| Type                                      | Usage                               |
+|:------------------------------------------|:------------------------------------|
+| [Data message](#data-message)             | Transmit samples for paths          |
+| [Request message](#request-message)       | Request samples, including history  |
+| [Deletion message](#data-deletion-message) | Delete samples, including history |
+| [Subscription inclusion](#subscriptions)   | Include a path in a subscription   |
+| [Subscription exclusion](#subscriptions)   | Exclude a path from a subscription |
+| [Subscription deletion](#subscriptions)    | Deletrules of a subscription       |
 
 ## Core functionality
 
@@ -184,6 +185,18 @@ The response may include a timestamp to indicate when the response was created.
 The `count` property can be set in responses to value requests if `request` is set, to indicate the total number of messages being sent.
 If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
 If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
+
+### Data deletion message
+
+The deletion of data is requested in almost the same way as a data request.
+
+| Field     | Type             | Description                                                                                          |
+|:----------|:-----------------|:-----------------------------------------------------------------------------------------------------|
+| `path`    | `Array<String>`  | The path to be deleted  .                                                                            |
+| `start`   | `Optional<Date>` | The start date of the interval (exclusive). Beginning of time is assumed if omitted.                 |
+| `end`     | `Optional<Date>` | The end date of the interval (inclusive). End of time is assumed if omitted                          |
+| `depth`   | `Optional<Int>`  | The number of levels below the path to delete. All values of the sub-tree are deleted if omitted.    |
+| `request` | `Optional<Int>`  | The request id to identify the response(s)                                                           |
 
 ### Subscriptions
 
