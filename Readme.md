@@ -41,7 +41,8 @@ These inputs and outputs are the interfaces to other components.
 Each input/output represents a single `state`, which changes its `value` over time, e.g. the temperature reading of a sensor.
 The output of one component can be the input of one or more other components (e.g. for telemetry), and it's also possible for multiple components to write to a single input (e.g. for commanding or configuration).
 States are uniquely identified by `paths`, which consist of a list of strings, e.g. `["device", "sensor", "temperature"]`.
-This creates a tree structure, where `["sensor", "temperature"]` and `["sensor", "voltage"]` are both sub-elements of `["sensors"]`. This concept should feel familiar, e.g. from file systems or MQTT.
+This creates a tree structure, where `["sensor", "temperature"]` and `["sensor", "voltage"]` are both sub-elements of `["sensor"]`.
+This concept should feel familiar, e.g. from file systems or MQTT.
 
 Each data point (`state`) in the system is intended as a primitive type (think integer or string), but can be arbitrarily complex.
 The components exchange updates for `state`s via simple messages, which also facilitate operations like subscriptions or the request of historical data.
@@ -114,10 +115,14 @@ To support these scenarios, the messages must be:
 - independent (only implement required functionality)
 - primitive (few fields, low complexity)
 
-There are currently three different message types defined:
-- Push: Send a value
-- Request: Request values, create subscriptions
-- History: Request historic values in an interval
+There are currently six different message types defined:
+- Data: Send one or more values
+- Request: Request current values or history
+- Deletion: Request hremoval of data
+- Subscriptions:
+  - Inclusion: Add a tree to a subscription
+  - Exclusion: Exclude a tree from a subscription
+  - Deletion: Delete previous rules of a subscription
 
 These messages are described in more detail in [Messages.md](Messages.md).
 

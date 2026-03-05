@@ -106,7 +106,7 @@ A value message has the following fields:
 
 | Field     | Type                      | Description                                                                                 |
 |:----------|:--------------------------|:--------------------------------------------------------------------------------------------|
-| `path`    | `Array<String>`           | The path to which the value belongs.                                                        |
+| `path`    | `Optional<Array<String>>` | The path to which the value belongs. Defaults to an empty array                             |
 | `value`   | `Optional<Value>`         | The value being transmitted. Can be omitted if `samples` is set.                            |
 | `time`    | `Optional<Date>`          | The timestamp of the `value`. Current time is assumed if omitted.                           |
 | `samples` | `Optional<Array<Sample>>` | The list of values being transmitted. Can be omitted if `value` is provided. Each sample consists of a `value` and a `time` (both required). |
@@ -117,6 +117,10 @@ Note that `value` has the unspecified type `Value`. The abstract SOIL concept do
 Some use cases may call for highly specific types, while others may just use basic types like integers, doubles, and strings.
 It is recommended to keep the types as primitive as possible, to keep the complexity of the implementations low.
 There is also often no need to handle type sizes (like `Int32` or `UInt8`) within SOIL, since those are mostly restrictions for transmissions and storage, which don't apply to SOIL.
+
+The `path` field should almost always be set.
+If a very simple component only sends a single piece of information, then it may do so without a path.
+It is then assumed that the received data will be placed in the correct path by the receiver.
 
 #### Acknowledgements
 
@@ -192,7 +196,7 @@ The deletion of data is requested in almost the same way as a data request.
 
 | Field     | Type             | Description                                                                                          |
 |:----------|:-----------------|:-----------------------------------------------------------------------------------------------------|
-| `path`    | `Array<String>`  | The path to be deleted  .                                                                            |
+| `path`    | `Array<String>`  | The path to be deleted                                                                               |
 | `start`   | `Optional<Date>` | The start date of the interval (exclusive). Beginning of time is assumed if omitted.                 |
 | `end`     | `Optional<Date>` | The end date of the interval (inclusive). End of time is assumed if omitted                          |
 | `depth`   | `Optional<Int>`  | The number of levels below the path to delete. All values of the sub-tree are deleted if omitted.    |
@@ -223,11 +227,14 @@ For a more detailed description of the features, see [subscriptions](Subscriptio
 
 Both messages for inclusion and exclusion have the following fields:
 
-| Field          | Type            | Description                                    |
-|:---------------|:----------------|:-----------------------------------------------|
-| `subscription` | `Int`           | The id of the subscription to create or modify |
-| `path`         | `Array<String>` | The path to include or exclude                 |
+| Field          | Type            | Description                                                    |
+|:---------------|:----------------|:---------------------------------------------------------------|
+| `subscription` | `Optional<Int>` | The id of the subscription to create or modify (defaults to 0) |
+| `path`         | `Array<String>` | The path to include or exclude                                 |
 | `depth`        | `Optional<Int>` | The number of levels below the path to target. The full tree below the path is included/excluded if omitted |
+
+If no `subscription` field is provided, then the default subscription `0` is assumed.
+A component may choose to omit this field if it only creates one subscription.
 
 #### Deleting subscriptions
 
