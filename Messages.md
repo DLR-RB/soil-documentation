@@ -17,19 +17,22 @@ Check specific implementations for details on these aspects.
 
 There are currently these different message types defined:
 
-| Type                                      | Usage                               |
-|:------------------------------------------|:------------------------------------|
-| [Data message](#data-message)             | Transmit samples for paths          |
-| [Request message](#request-message)       | Request samples, including history  |
-| [Deletion message](#data-deletion-message) | Delete samples, including history |
-| [Subscription inclusion](#subscriptions)   | Include a path in a subscription   |
-| [Subscription exclusion](#subscriptions)   | Exclude a path from a subscription |
-| [Subscription deletion](#subscriptions)    | Deletrules of a subscription       |
+| Type                                       | Usage                               |
+|:-------------------------------------------|:------------------------------------|
+| [Data message](#data-message)              | Transmit samples for paths          |
+| [Request message](#request-message)        | Request samples, including history  |
+| [Deletion message](#data-deletion-message) | Delete samples, including history   |
+| [Subscription inclusion](#subscriptions)   | Include a path in a subscription    |
+| [Subscription exclusion](#subscriptions)   | Exclude a path from a subscription  |
+| [Subscription deletion](#subscriptions)    | Delete rules of a subscription      |
 
 ## Core functionality
 
 At the most basic level, a SOIL component only does two things: Transmit and receive data.
 Consequently, there are only two messages required to perform these functions.
+
+ > The following examples use JSON to illustrate the contents of messages,
+ > but the structure of the messages also applies to other encodings.
 
 ### Sending data
 
@@ -235,6 +238,9 @@ Both messages for inclusion and exclusion have the following fields:
 
 If no `subscription` field is provided, then the default subscription `0` is assumed.
 A component may choose to omit this field if it only creates one subscription.
+
+TODO: Add `count` field to indicate order of subscription rules, in case of out-of-order delivery.
+TODO: How to confirm subscriptions?
 
 #### Deleting subscriptions
 
