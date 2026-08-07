@@ -6,7 +6,7 @@ This document describes the JSON encoding format defined in the SOIL core librar
 
 There are currently six different messages in SOIL:
 
-| Type                                                      | Usage                                     |
+| Message Type                                              | Usage                                     |
 |:----------------------------------------------------------|:------------------------------------------|
 | [Data message](#data-message)                             | Transmit a tree for a path                |
 | [Request message](#request-message)                       | Request a tree, including history         |
@@ -22,10 +22,10 @@ The following fields are supported:
 
 | Field                      | Description                                                                 |
 |:---------------------------|:----------------------------------------------------------------------------|
-| [`type`](#message-type)    | Omitted, or `data`                                                          |
+| [`message`](#message-type) | Omitted, or `data`                                                          |
 | [`path`](#path)            | The top-level path of the transmitted data                                  |
 | [`value`](#value)          | A value of the top-level `path`                                             |
-| [`valueType`](#value-type) | The data type of `value`                                                    |
+| [`type`](#value-type)      | The data type of `value`                                                    |
 | [`time`](#time)            | The timestamp of the `value`                                                |
 | [`samples`](#samples)      | Samples associated with `path`                                              |
 | [`count`](#count)          | Total number of grouped messages, if `id` is set                            |
@@ -37,61 +37,61 @@ The following fields are supported:
 Request messages are sent to SOIL components to request data.
 The following fields are supported:
 
-| Field                   | Description                                                    |
-|:------------------------|:---------------------------------------------------------------|
-| [`type`](#message-type) | Must be `read`                                                 |
-| [`path`](#path)         | The requested top-level pathfor which data is requested        |
-| [`time`](#time)         | The start time of the requested interval (exclusive)           |
-| [`count`](#count)       | The maximum number of requested samples per node               |
-| [`depth`](#depth)       | The number of levels below the `path` for which to return data |
-| [`end`](#end)           | The end of the requested time interval (inclusive)             |
-| [`id`](#id)             | A unique id to identify the request, used in response message  |
+| Field                      | Description                                                    |
+|:---------------------------|:---------------------------------------------------------------|
+| [`message`](#message-type) | Must be `read`                                                 |
+| [`path`](#path)            | The requested top-level path for which data is requested       |
+| [`time`](#time)            | The start time of the requested interval (exclusive)           |
+| [`count`](#count)          | The maximum number of requested samples per node               |
+| [`depth`](#depth)          | The number of levels below the `path` for which to return data |
+| [`end`](#end)              | The end of the requested time interval (inclusive)             |
+| [`id`](#id)                | A unique id to identify the request, used in response message  |
 
 ### Data deletion message
 
 These messages are used to request the deletion of data from supported nodes.
 The following fields are supported:
 
-| Field                   | Description                                                  |
-|:------------------------|:-------------------------------------------------------------|
-| [`type`](#message-type) | Must be `delete`                                             |
-| [`path`](#path)         | The top-level path for which data is deleted                 |
-| [`time`](#time)         | The start time of the interval to delete (exclusive)         |
-| [`depth`](#depth)       | The number of levels below `path` to include in the deletion |
-| [`end`](#end)           | The end of the time interval to delete (inclusive)           |
+| Field                      | Description                                                  |
+|:---------------------------|:-------------------------------------------------------------|
+| [`message`](#message-type) | Must be `delete`                                             |
+| [`path`](#path)            | The top-level path for which data is deleted                 |
+| [`time`](#time)            | The start time of the interval to delete (exclusive)         |
+| [`depth`](#depth)          | The number of levels below `path` to include in the deletion |
+| [`end`](#end)              | The end of the time interval to delete (inclusive)           |
 
 ### Subscription inclusion message
 
 These messages are used to subscribe to future updates.
 The following fields are supported:
 
-| Field                   | Description                                                      |
-|:------------------------|:-----------------------------------------------------------------|
-| [`type`](#message-type) | Must be `include`                                                |
-| [`path`](#path)         | The top-level path to subscribe to                               |
-| [`depth`](#depth)       | The number of levels below `path` to include in the subscription |
+| Field                      | Description                                                      |
+|:---------------------------|:-----------------------------------------------------------------|
+| [`message`](#message-type) | Must be `include`                                                |
+| [`path`](#path)            | The top-level path to subscribe to                               |
+| [`depth`](#depth)          | The number of levels below `path` to include in the subscription |
 
 ### Subscription exclusion message
 
 These messages are used to unsubscribe from future updates.
 The following fields are supported:
 
-| Field                   | Description                                                        |
-|:------------------------|:-------------------------------------------------------------------|
-| [`type`](#message-type) | Must be `exclude`                                                  |
-| [`path`](#path)         | The top-level path to unsubscribe from                             |
-| [`depth`](#depth)       | The number of levels below `path` to exclude from the subscription |
+| Field                      | Description                                                        |
+|:---------------------------|:-------------------------------------------------------------------|
+| [`message`](#message-type) | Must be `exclude`                                                  |
+| [`path`](#path)            | The top-level path to unsubscribe from                             |
+| [`depth`](#depth)          | The number of levels below `path` to exclude from the subscription |
 
 ### Subscription deletion message
 
 These messages are used to delete subscription rules.
 The following fields are supported:
 
-| Field                   | Description                                                         |
-|:------------------------|:--------------------------------------------------------------------|
-| [`type`](#message-type) | Must be `clear`                                                     |
-| [`path`](#path)         | The top-level path for which to remove the subscription rules       |
-| [`depth`](#depth)       | The number of levels below `path` for which to also clear the rules |
+| Field                      | Description                                                         |
+|:---------------------------|:--------------------------------------------------------------------|
+| [`message`](#message-type) | Must be `clear`                                                     |
+| [`path`](#path)            | The top-level path for which to remove the subscription rules       |
+| [`depth`](#depth)          | The number of levels below `path` for which to also clear the rules |
 
 ## Message Fields
 
@@ -99,10 +99,10 @@ All six messages are realized using a single JSON message, with the following to
 
 | Field                      | Description                                                                       |
 |:---------------------------|:----------------------------------------------------------------------------------|
-| [`type`](#message-type)    | Specifies the type of message                                                     |
+| [`message`](#message-type) | Specifies the type of message                                                     |
 | [`path`](#path)            | The top-level path                                                                |
 | [`value`](#value)          | A value being transmitted                                                         |
-| [`valueType`](#value-type) | The data type of `value`                                                          |
+| [`type`](#value-type)      | The data type of `value`                                                          |
 | [`time`](#time)            | The timestamp of the `value`, or the start of a time interval                     |
 | [`samples`](#samples)      | Samples associated with the `path`                                                |
 | [`count`](#count)          | Total number of grouped messages, or maximum number of requested samples per node |
@@ -113,11 +113,11 @@ All six messages are realized using a single JSON message, with the following to
 
 ### Message type
 
-| Name          | `"type"` |
-|:--------------|:---------|
-| Type          | Text     |
-| Optional      | Yes      |
-| Default value | `"data"` |
+| Name          | `"message"` |
+|:--------------|:------------|
+| Type          | Text        |
+| Optional      | Yes         |
+| Default value | `"data"`    |
 
 The `type` field identifies the type of the message, e.g. if the message represents a request for data, or transmits a tree.
 The six different types of messages are represented by strings according to the following table:
@@ -131,7 +131,7 @@ The six different types of messages are represented by strings according to the 
 | `exclude` | [Subscription exclusion](#subscriptions-exclusion-message) |
 | `clear`   | [Subscription deletion](#subscriptions-deletion-message)   |
 
-The field is named `"type"` and expects a text value.
+The field is named `"message"` and expects a text value.
 
 This field is optional. If the field is not contained in a message, then the message is treated as a data message (`data`).
 
@@ -139,7 +139,7 @@ Example:
 
 ```json
 {
-    "type": "data"
+    "message": "data"
 }
 ```
 
@@ -183,10 +183,10 @@ Example:
 
 The `value` field is only used for [data messages](#data-message).
 It contains a value associated with the path specified in the [`path`](#path) field.
-The SOIL type of the contained value may be further specified with the [`valueType`](#value-type) field.
+The SOIL type of the contained value may be further specified with the [`type`](#value-type) field.
 JSON types are mapped to SOIL types in the following way:
 
-| SOIL Type | JSON Type   | [`valueType`](#value-type) | Comment                                 |
+| SOIL Type | JSON Type   | [`type`](#value-type) | Comment                                 |
 |:----------|:------------|:---------------------------|:----------------------------------------|
 | Integer   | Number      | `"integer"`                |                                         |
 | Double    | Number      | omitted, or `"double"`     |                                         |
@@ -209,21 +209,21 @@ Example:
 
 ### Value type
 
-| Name          | `"valueType"` |
-|:--------------|:--------------|
-| Type          | Text          |
-| Optional      | Yes           |
-| Default value | N/A           |
+| Name          | `"type"` |
+|:--------------|:---------|
+| Type          | Text     |
+| Optional      | Yes      |
+| Default value | N/A      |
 
-The `valueType` field is used only in connection with the `value` field, and identifies the type of the `value` field.
-The `valueType` field is necessary to signal SOIL `Integer` and `Data` types, for all other types it is optional.
-It can only appear without a `value` field, if `valueType` is set to the JSON `null` value.
+The `type` field is used only in connection with the `value` field, and identifies the type of the `value` field.
+The `type` field is necessary to signal SOIL `Integer` and `Data` types, for all other types it is optional.
+It can only appear without a `value` field, if `type` is set to the JSON `null` value.
 
 Example:
 
 ```json
 {
-    "valueType": "data"
+    "type": "integer"
 }
 ```
 
@@ -273,14 +273,14 @@ Each object represents a sample, with the following fields:
 | `type`  | The type of the value, see [value type](#value-type) (Note the different field name!) |
 | `time`  | The timestamp associated with the value, see [time](#time)                            |
 
-Samples use the same fields as the top-level object (`value`, `valueType`, `time`), except that the `valueType` field is labeled as `type`.
+Samples use the same fields as the top-level object (`value`, `type`, `time`).
 The following messages are equivalent:
 
 ```json
 {
     "path": ["my", "value"],
     "value": 123,
-    "valueType": "integer",
+    "type": "integer",
     "time": 123456789.012
 }
 ```
@@ -291,7 +291,7 @@ The following messages are equivalent:
     "samples": [
         {
             "value": 123,
-            "valueType": "integer",
+            "type": "integer",
             "time": 123456789.012
         }
     ]
