@@ -7,6 +7,7 @@ This document describes the binary encoding format defined in the SOIL core libr
 - [Message types](#message-types)
 - [Data messages](#data-messages)
 - [Request messages](#request-messages)
+- [Deletion requests](#data-deletion-messages)
 - [Subscription inclusion](#subscription-inclusion-messages)
 - [Subscription exclusion](#subscription-exclusion-messages)
 - [Subscription deletion](#subscription-deletion-messages)

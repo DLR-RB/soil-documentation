@@ -2,6 +2,29 @@
 
 This document describes the JSON encoding format defined in the SOIL core libraries.
 
+### Table of contents
+
+- [Message types](#message-types)
+- [Data messages](#data-messages)
+- [Request messages](#request-messages)
+- [Deletion requests](#data-deletion-messages)
+- [Subscription inclusion](#subscription-inclusion-messages)
+- [Subscription exclusion](#subscription-exclusion-messages)
+- [Subscription deletion](#subscription-deletion-messages)
+- [Message fields](#message-fields)
+  - [Message type](#message-type)
+  - [Path](#path)
+  - [Value](#value)
+  - [Value type](#value-type)
+  - [Time](#time)
+  - [Samples](#samples)
+  - [Count](#count)
+  - [Depth](#depth)
+  - [End](#end)
+  - [Id](#id)
+  - [Children](#children)
+- [Examples](#examples)
+
 ## Message types
 
 There are currently six different messages in SOIL:
@@ -15,7 +38,7 @@ There are currently six different messages in SOIL:
 | [Subscription exclusion](#subscription-exclusion-message) | Prevent future updates for a path or tree   |
 | [Subscription deletion](#subscription-deletion-message)   | Clear subscription rules for a path or tree |
 
-### Data message
+### Data messages
 
 Data messages are used to transmit data.
 The following fields are supported:
@@ -32,7 +55,7 @@ The following fields are supported:
 | [`id`](#id)                | A unique id to identify the message, for responses or to group messages     |
 | [`children`](#children)    | Additional data beneath the top level path. Used to construct complex trees |
 
-### Request message
+### Request messages
 
 Request messages are sent to SOIL components to request data.
 The following fields are supported:
@@ -47,7 +70,7 @@ The following fields are supported:
 | [`end`](#end)              | The end of the requested time interval (inclusive)             |
 | [`id`](#id)                | A unique id to identify the request, used in response message  |
 
-### Data deletion message
+### Data deletion messages
 
 These messages are used to request the deletion of data from supported nodes.
 The following fields are supported:
@@ -60,7 +83,7 @@ The following fields are supported:
 | [`depth`](#depth)          | The number of levels below `path` to include in the deletion |
 | [`end`](#end)              | The end of the time interval to delete (inclusive)           |
 
-### Subscription inclusion message
+### Subscription inclusion messages
 
 These messages are used to subscribe to future updates.
 The following fields are supported:
@@ -71,7 +94,7 @@ The following fields are supported:
 | [`path`](#path)            | The top-level path to subscribe to                               |
 | [`depth`](#depth)          | The number of levels below `path` to include in the subscription |
 
-### Subscription exclusion message
+### Subscription exclusion messages
 
 These messages are used to unsubscribe from future updates.
 The following fields are supported:
@@ -82,7 +105,7 @@ The following fields are supported:
 | [`path`](#path)            | The top-level path to unsubscribe from                             |
 | [`depth`](#depth)          | The number of levels below `path` to exclude from the subscription |
 
-### Subscription deletion message
+### Subscription deletion messages
 
 These messages are used to delete subscription rules.
 The following fields are supported:
@@ -421,6 +444,9 @@ Each object in this nested structure represents a node in a tree, and can have t
 | `children` | Additional child nodes of this node                                                   |
 
 This recursive definition allows the transmission of complex tree structures, with multiple levels of nesting.
+
+## Examples
+
 Consider the following information:
 ```
 rover.position.x = 12.3

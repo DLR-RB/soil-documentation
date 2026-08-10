@@ -8,6 +8,7 @@ The corresponding message definitions can be found in [soil.proto](soil.proto).
 - [Message types](#message-types)
 - [Data messages](#data-messages)
 - [Request messages](#request-messages)
+- [Deletion requests](#data-deletion-messages)
 - [Subscription inclusion](#subscription-inclusion-messages)
 - [Subscription exclusion](#subscription-exclusion-messages)
 - [Subscription deletion](#subscription-deletion-messages)
@@ -40,7 +41,7 @@ enum PbMessageType {
 
 ## Message structure
 
-All SOIL messages are encoding using the same protobuf message:
+All SOIL messages are encoded using the same protobuf message:
 
 ```proto
 message PbMessage {
@@ -62,15 +63,15 @@ message PbMessage {
 
 ## Data messages
 
-Data messages (`PbMessageType.DATA`) use the following fields of a [generic message](#message-structure):
+Data messages use the following fields of a [generic message](#message-structure):
 
-| Field     | Content                                                                 |
-|:----------|:------------------------------------------------------------------------|
-| `message` | Set to `PbMessageType.DATA`                                             |
-| `path`    | The top-level path of the transmitted `data`                            |
-| `count`   | Total number of grouped messages, if `id` is set                        |
-| `id`      | A unique id to identify the message, for responses or to group messages |
-| `data`    | The transmitted data, encoded as a [tree](#tree)                        |
+| Field   | Content                                                                 |
+|:--------|:------------------------------------------------------------------------|
+| `type`  | Set to `DATA`, see [message types](#message-types)                      |
+| `path`  | The top-level path of the transmitted `data`                            |
+| `count` | Total number of grouped messages, if `id` is set                        |
+| `id`    | A unique id to identify the message, for responses or to group messages |
+| `data`  | The transmitted data, encoded as a [tree](#tree)                        |
 
 Note that the fields `id`, and `count` can be `null`, in which case the respective field is not set.
 
