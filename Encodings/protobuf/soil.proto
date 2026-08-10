@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+// The type of the transmitted message
+enum PbMessageType {
+
+    // A message containing data (default if absent)
+    DATA = 0;
+
+    // A request for data
+    REQUEST = 1;
+
+    // A request to delete data
+    DELETE = 2;
+
+    // Request future updates for a path
+    SUBSCRIPTION_INCLUDE = 3;
+
+    // Exclude a path from future updates
+    SUBSCRIPTION_EXCLUDE = 4;
+
+    // Remove subscription rules for a path
+    SUBSCRIPTION_CLEAR = 5;
+}
+
+// A SOIL path
+message PbPath {
+    // The components of the path
+    repeated string components = 1;
+}
+
+// A sample assigned to a tree node
+message PbSample {
+
+    // The UTC timestamp of the sample (seconds since 1970)
+    optional double time = 1;
+
+    // The value of the sample
+    oneof value {
+        // An integer value
+        sint64 integer = 2;
+
+        // A double value
+        double double = 3;
+
+        // A string value
+        string string = 4;
+
+        // A binary value
+        bytes data = 5;
+
+        // A path value
+        PbPath path = 6;
+    }
+}
+
+// A tree with samples and children
+message PbTree {
+
+    // The samples at the node
+    repeated PbSample samples = 8;
+
+    // The children of that node
+    map<string, PbTree> children = 9;
+}
+
+// A message transmitted using SOIL
+message PbMessage {
+
+    // The type of the message
+    PbMessageType type = 1;
+
+    // The top-level path
+    repeated string path = 2;
+
+    // The start time for requests (UTC seconds since 1970)
+    optional double start_time = 3;
+
+    // The end time for requests (UTC seconds since 1970)
+    optional double end_time = 4;
+
+    // The number of messages, or a maximum count
+    optional uint32 count = 5;
+
+    // The number of levels to target
+    optional uint32 depth = 6;
+
+    // The id of the message
+    optional uint64 id = 7;
+
+    // The data transmitted for the path
+    optional PbTree data = 8;
+}
