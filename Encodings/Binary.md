@@ -16,14 +16,14 @@ This document describes the binary encoding format defined in the SOIL core libr
 
 There are currently six different messages in SOIL:
 
-| Type                                                       | Raw Value | Usage                                     |
-|:-----------------------------------------------------------|:----------|:------------------------------------------|
-| [Data message](#data-messages)                             |       `0` | Transmit a tree for a path                |
-| [Request message](#request-messages)                       |       `1` | Request a tree, including history         |
-| [Deletion message](#data-deletion-messages)                |       `2` | Delete parts of a tree, including history |
-| [Subscription inclusion](#subscription-inclusion-messages) |       `3` | Include a path in a subscription          |
-| [Subscription exclusion](#subscription-exclusion-messages) |       `4` | Exclude a path from a subscription        |
-| [Subscription deletion](#subscription-deletion-messages)   |       `5` | Delete rules of a subscription            |
+| Type                                                       | Raw Value | Usage                                       |
+|:-----------------------------------------------------------|:----------|:--------------------------------------------|
+| [Data message](#data-messages)                             |       `0` | Transmit a tree for a path                  |
+| [Request message](#request-messages)                       |       `1` | Request a tree, including history           |
+| [Deletion message](#data-deletion-messages)                |       `2` | Delete parts of a tree, including history   |
+| [Subscription inclusion](#subscription-inclusion-messages) |       `3` | Request future updates for a path or tree   |
+| [Subscription exclusion](#subscription-exclusion-messages) |       `4` | Prevent future updates for a path or tree   |
+| [Subscription deletion](#subscription-deletion-messages)   |       `5` | Clear subscription rules for a path or tree |
 
 The message type is encoded as the first three bits (MSB) of any message.
 

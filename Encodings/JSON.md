@@ -6,14 +6,14 @@ This document describes the JSON encoding format defined in the SOIL core librar
 
 There are currently six different messages in SOIL:
 
-| Message Type                                              | Usage                                     |
-|:----------------------------------------------------------|:------------------------------------------|
-| [Data message](#data-message)                             | Transmit a tree for a path                |
-| [Request message](#request-message)                       | Request a tree, including history         |
-| [Deletion message](#data-deletion-message)                | Delete parts of a tree, including history |
-| [Subscription inclusion](#subscription-inclusion-message) | Include a path in a subscription          |
-| [Subscription exclusion](#subscription-exclusion-message) | Exclude a path from a subscription        |
-| [Subscription deletion](#subscription-deletion-message)   | Delete rules of a subscription            |
+| Message Type                                              | Usage                                       |
+|:----------------------------------------------------------|:--------------------------------------------|
+| [Data message](#data-message)                             | Transmit a tree for a path                  |
+| [Request message](#request-message)                       | Request a tree, including history           |
+| [Deletion message](#data-deletion-message)                | Delete parts of a tree, including history   |
+| [Subscription inclusion](#subscription-inclusion-message) | Request future updates for a path or tree   |
+| [Subscription exclusion](#subscription-exclusion-message) | Prevent future updates for a path or tree   |
+| [Subscription deletion](#subscription-deletion-message)   | Clear subscription rules for a path or tree |
 
 ### Data message
 
