@@ -1,52 +1,57 @@
 # SOIL (States/Outputs/Inputs/Logic)
 
-`SOIL` is a general-purpose data management, transmission, and monitoring/control concept, which aims to provide ease-of-use and flexibility while creating complex systems that exchange, store, and display data from various sources.
-All data in the system is envisioned as a tree structure, with components publishing and subscribing to paths in this tree to synchronize their data.
-This generic approach can be applied to many different areas, including spacecraft operations, sensor networks, server monitoring, file system backups, configuration management, and distributed logging.
-It's even possible to build relational data models, complete with multi-party syncronization.
-Despite this myriad use cases, `SOIL`'s main aim is simplicity.
+`SOIL` is a general-purpose data distribution and management concept that aims to provide simplicity and flexibility.
+It consists of:
+- An abstract concept of how systems interact and exchange data
+- A data distribution layer based on simple messages
+- Concrete implementations and specifications for different transport layers and encodings
+- Generic utilities and concepts for data management, storage, and processing
+- Supporting code and documentation for fast system integration
 
-Some highlights of what `SOIL` can provide:
-- Exchange of arbitrary data structures through simple messages
-- Archiving with no mission-specific setup
-- Treatment of logging and configuration as data
-- Freedom to use different transport layers and message encoding
-- Subscriptions and requests to create complex data flows
-- Transmission and management of historic data
-- Dynamic configuration with persistence, history, and reporting
-- Dynamic system composition and extension
+## Core idea
 
-Perhaps equally important is what it does *not* do:
-- It doesn't force you to use a specific platform or programming language
-- It doesn't force you to use a specific transport layer
-- It doesn't force you to use a specific message encoding
-- It doesn't tell you how to structure your data
-- It doesn't tell you how to structure your data flows
-- It doesn't tell you how to structure your system
+`SOIL` is based on the idea that the data transmitted between/within systems can be represented using a simple tree structure containing primitive values.
+The exchange of these structures is done using basic operations like write, read, delete, and subscribe.
+A system can then be viewed as a collection of components that create and receive structured data.
 
-`SOIL` provides:
-- A unified view of many different use cases with the same abstract properties
-- Instructions to convert and adapt systems to work in a generic way
-- Generic components to send, receive, and archive data
-- Implementations of the core concepts for multiple programming languages and platforms
+Using this abstract view allows SOIL to be used as a simple data distribution framework between different systems through simple adapters.
+The generic tree representation fits many use cases, and useful abstraction layers make it easy to reuse generic components.
 
-### Core concepts
+On top of the simple data distribution SOIL provides concepts and implementations to perform logging, configuration, storage, subscriptions, data management, and even supports relational data models with multi-party synchronization.
+Despite this myriad use cases, `SOIL`'s main aim is simplicity, by letting users choose which features to implement.
 
-The framework is based on a few main axioms:
-- Systems can be structured as (small) components, which interact with each other through data exchange.
-- The data of each component can be broken down into primitive data types with some structure.
+> The name `SOIL` comes from the idea that data organized in `states` (S), where `outputs` (O) are produced based on some `inputs` (I) according to some `logic` (L).
 
-Within `SOIL`, every part of the system is viewed as a component with data organized in `states` (S), which produces some `outputs` (O) based on some `inputs` (I) according to some internal `logic` (L) (hence the name `SOIL`).
-These inputs and outputs are the interfaces to other components.
-Each input/output represents a single `state`, which changes its `value` over time, e.g. the temperature reading of a sensor.
-The output of one component can be the input of one or more other components (e.g. for telemetry), and it's also possible for multiple components to write to a single input (e.g. for commanding or configuration).
-States are uniquely identified by `paths`, which consist of a list of strings, e.g. `["device", "sensor", "temperature"]`.
-This creates a tree structure, where `["sensor", "temperature"]` and `["sensor", "voltage"]` are both sub-elements of `["sensor"]`.
-This concept should feel familiar, e.g. from file systems or MQTT.
+### Basic example
 
-Each data point (`state`) in the system is intended as a primitive type (think integer or string), but can be arbitrarily complex.
-The components exchange updates for `state`s via simple messages, which also facilitate operations like subscriptions or the request of historical data.
-With these simple primities
+A simple environmental sensor may measure three properties: temperature, humidity, and pressure.
+The sensor's data model may be represented as a small tree:
+
+
+                     +----------+
+                     |  Sensor  |
+                     +----------+
+                    /     |      \
+                   /      |       \
+    +-------------+  +----------+  +----------+
+    | Temperature |  | Pressure |  | Humidity |
+    +-------------+  +----------+  +----------+
+
+A single temperature could therefore be transmitted by the sensor as:
+
+```json
+{
+    "path": ["sensor", "temperature"],
+    "value": 21.3
+}
+```
+
+The message above is alreay a valid SOIL message in [JSON format](Encodings/JSON.md), allowing the sensor to send data into a SOIL system.
+While the message contains only data for a single node in the data tree, it's also possible to send complex data structures, with different primitive types.
+
+In addition to just sending data, it's also possible to request and delete data, and to subscribe to updates.
+This allows more complex data flows. In the sensor example above, it would be possible to only explicitly request measurements from the sensor (polling),
+or to subscribe to specific paths like the temperature.
 
 ### Philosophy
 
@@ -59,29 +64,18 @@ There are already enough [competing standards](https://xkcd.com/927) out there.
 It then establishes an abstract concept of data exchange, but still leaves room for variants to meet specific use cases.
 Finally, it provides some implementations that can be applied for various purposes, or serve as examples for own implementations.
 The intent is to create systems that can be *adapted* to work with existing standards through lightweight interfacing components.
-It should also be easily possible to connect different variants based on `SOIL`.
 
 #### Simple solutions for simple problems
 
 When users want to do simple things (e.g. sending and receiving a single value), then the solution should also be simple.
 No complex encodings, configuration, or setup. No unnecessary features that the user doesn't need for the task.
-As an example, here is how a simple sensor value is transmitted in `SOIL`:
-
-```json
-{
-    "path": ["sensor", "temperature"],
-    "value": 21.3
-}
-```
-
-There is no need to understand subscriptions, history requests or other concepts, since they are not relevant here.
 
 #### Composition over complexity
 
 Many multi-purpose systems attempt to anticipate all use cases and supply solutions for everything in a single package.
 This leads to very complex systems where most features are never used, and the users have to deal with complicated configuration, complex interfaces and extensive documentation.
 Counter to this approach, `SOIL` encourages the perspective that all systems are composed of smaller components, which interact with each other.
-By designing a system this way, it becomes easier to compose complex systems from simple components, tailored exactly to the current use case, but easily extensible in the future
+By designing a system this way, it becomes easier to compose complex systems from simple components, tailored exactly to the current use case, but easily extensible in the future.
 
 #### Dynamic by default, static if needed
 
@@ -118,13 +112,18 @@ To support these scenarios, the messages must be:
 There are currently six different message types defined:
 - Data: Send one or more values
 - Request: Request current values or history
-- Deletion: Request hremoval of data
+- Deletion: Request removal of data
 - Subscriptions:
   - Inclusion: Add a tree to a subscription
   - Exclusion: Exclude a tree from a subscription
   - Deletion: Delete previous rules of a subscription
 
 These messages are described in more detail in [Messages.md](Messages.md).
+
+### Encodings
+
+There are a few standardizes message encodings available for SOIL.
+These are described in [Encodings](Encodings/Readme.md).
 
 #### Access control
 
