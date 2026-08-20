@@ -46,7 +46,7 @@ A single temperature could therefore be transmitted by the sensor as:
 }
 ```
 
-The message above is alreay a valid SOIL message in [JSON format](Encodings/JSON.md), allowing the sensor to send data into a SOIL system.
+The message above is already a valid SOIL message in [JSON format](Encodings/JSON.md), allowing the sensor to send data into a SOIL system.
 While the message contains only data for a single node in the data tree, it's also possible to send complex data structures, with different primitive types.
 
 In addition to just sending data, it's also possible to request and delete data, and to subscribe to updates.
