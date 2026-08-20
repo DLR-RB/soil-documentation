@@ -64,3 +64,9 @@ That's a mechanism that was considered, but it was decided against it.
 - It adds more complexity for whole protocol
 - A component may want to construct more elaborate subscriptions without receiving many unnecessary values
 - Current values can be requested separately
+
+#### Acknowledgements
+
+There are no explicit acknowledgements in SOIL, since the transport layer is assumed to deliver all messages, and retransmission / quality of service should be handled there.
+It is however possible to use data messages as acknowledgements, if absolutely necessary.
+If a component receives a value message containing a `request` field that is not a response to a request made by itself, then it could respond with a value message containing the `path` of the received message, with the `time` field set to the current time, but without any additional data.

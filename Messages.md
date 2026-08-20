@@ -107,29 +107,32 @@ All possible fields in a data message can be found in the following table.
 
 A value message has the following fields:
 
-| Field     | Type                      | Description                                                                                 |
-|:----------|:--------------------------|:--------------------------------------------------------------------------------------------|
-| `path`    | `Optional<Array<String>>` | The path to which the value belongs. Defaults to an empty array                             |
-| `value`   | `Optional<Value>`         | The value being transmitted. Can be omitted if `samples` is set.                            |
-| `time`    | `Optional<Date>`          | The timestamp of the `value`. Current time is assumed if omitted.                           |
-| `samples` | `Optional<Array<Sample>>` | The list of values being transmitted. Can be omitted if `value` is provided. Each sample consists of a `value` and a `time` (both required). |
-| `request` | `Optional<Int>`           | The request id to which this message is a response                                          |
-| `count`   | `Optional<Int>`           | An optional number stating the total number of responses sent for the request               |
+| Field     | Type                      | Description                                                                   |
+|:----------|:--------------------------|:------------------------------------------------------------------------------|
+| `path`    | `Optional<Array<String>>` | The path to which the value belongs. Defaults to an empty array               |
+| `data`    | `Optional<SampleTree>`    | The data being transmitted. Defaults to an empty tree                         |
+| `request` | `Optional<Int>`           | The request id to which this message is a response                            |
+| `count`   | `Optional<Int>`           | An optional number stating the total number of responses sent for the request |
+
+The `data` field consists of a tree, which has the following structure:
+
+| Field      | Type                                | Description                                                                                              |
+|:-----------|:------------------------------------|:---------------------------------------------------------------------------------------------------------|
+| `samples`  | `Optional<Array<Sample>>`           | The samples at this node. Defaults to an empty array                                                     |
+| `children` | `Optional<Dict<String, SampleTree>` | The child nodes below this node, indexed by their name (path component). Defaults to an empty dictionary |
+
+Note that each child is again defined as a `SampleTree`, creating a recursive structure with an arbitrary number of levels.
+The `samples` of each tree node consist of an array of `Sample` objects, with the following fields:
+
+| Field     | Type              | Description                                                 |
+|:----------|:------------------|:------------------------------------------------------------|
+| `value`   | `Optional<Value>` | The value associated with the sample.                       |
+| `time`    | `Optional<Date>`  | The timestamp of the `value`. Defaults to the current time. |
 
 Note that `value` has the unspecified type `Value`. The abstract SOIL concept does not specify which types of values the system handles.
 Some use cases may call for highly specific types, while others may just use basic types like integers, doubles, and strings.
 It is recommended to keep the types as primitive as possible, to keep the complexity of the implementations low.
 There is also often no need to handle type sizes (like `Int32` or `UInt8`) within SOIL, since those are mostly restrictions for transmissions and storage, which don't apply to SOIL.
-
-The `path` field should almost always be set.
-If a very simple component only sends a single piece of information, then it may do so without a path.
-It is then assumed that the received data will be placed in the correct path by the receiver.
-
-#### Acknowledgements
-
-It possible to use value messages as acknowledgements, should this functionality be absolutely required (the transport layer is assumed to deliver all messages).
-If a component receives a value message containing a `request` field that is not a response to a request made by itself, then it should respond with a value message containing the `path` of the received message, with the `time` field set to the current time.
-The `value` and `samples` fields should be left empty.
 
 ### Data request message
 
@@ -141,14 +144,14 @@ Each request can produce an arbitrary number of responses (including zero).
 
 A request message has the following fields:
 
-| Field     | Type             | Description                                                                                          |
-|:----------|:-----------------|:-----------------------------------------------------------------------------------------------------|
-| `path`    | `Array<String>`  | The path to be requested.                                                                            |
-| `start`   | `Optional<Date>` | The start date of the interval (exclusive). Beginning of time is assumed if omitted.                 |
-| `end`     | `Optional<Date>` | The end date of the interval (inclusive). End of time is assumed if omitted                          |
+| Field     | Type             | Description                                                                                                       |
+|:----------|:-----------------|:------------------------------------------------------------------------------------------------------------------|
+| `path`    | `Array<String>`  | The path to be requested.                                                                                         |
+| `start`   | `Optional<Date>` | The start date of the interval (exclusive). Beginning of time is assumed if omitted.                              |
+| `end`     | `Optional<Date>` | The end date of the interval (inclusive). End of time is assumed if omitted                                       |
 | `limit`   | `Optional<Int>`  | The maximum number of samples to include for each node in the tree. All matching samples are returned if omitted. |
-| `depth`   | `Optional<Int>`  | The number of levels below the path to include. All values of the sub-tree are requested if omitted. |
-| `request` | `Optional<Int>`  | The request id to identify the response(s)                                                           |
+| `depth`   | `Optional<Int>`  | The number of levels below the path to include. All values of the sub-tree are requested if omitted.              |
+| `request` | `Optional<Int>`  | The request id to identify the response(s)                                                                        |
 
 #### Single value requests
 
@@ -230,17 +233,10 @@ For a more detailed description of the features, see [subscriptions](Subscriptio
 
 Both messages for inclusion and exclusion have the following fields:
 
-| Field          | Type            | Description                                                    |
-|:---------------|:----------------|:---------------------------------------------------------------|
-| `subscription` | `Optional<Int>` | The id of the subscription to create or modify (defaults to 0) |
-| `path`         | `Array<String>` | The path to include or exclude                                 |
+| Field          | Type            | Description                                                                                                 |
+|:---------------|:----------------|:------------------------------------------------------------------------------------------------------------|
+| `path`         | `Array<String>` | The path to include or exclude                                                                              |
 | `depth`        | `Optional<Int>` | The number of levels below the path to target. The full tree below the path is included/excluded if omitted |
-
-If no `subscription` field is provided, then the default subscription `0` is assumed.
-A component may choose to omit this field if it only creates one subscription.
-
-TODO: Add `count` field to indicate order of subscription rules, in case of out-of-order delivery.
-TODO: How to confirm subscriptions?
 
 #### Deleting subscriptions
 
@@ -248,7 +244,6 @@ A subscription deletion request can be used to remove all inclusion and exclusio
 
 | Field          | Type            | Description                                     |
 |:---------------|:----------------|:------------------------------------------------|
-| `subscription` | `Int`           | The id of the subscription to modify            |
 | `path`         | `Array<String>` | The path for which to delete subscription rules |
 | `depth`        | `Optional<Int>` | The number of levels below the path to target. `nil` indicates that all rules at and below the path should be deleted |
 
@@ -257,9 +252,9 @@ To completely remove all subscriptions, issue a request with an empty path (the 
 ## Message implementations
 
 Systems using SOIL are free to implement these messages however they see fit.
-Key-value based formats like JSON are possible, as are location-based formats.
+Key-value based formats like [JSON](Encodings/JSON.md) and [Protobuf](Encodings/protobuf/Protobuf.md) are available, as are location-based formats (like a [binary format](Encodings/Binary.md)).
 It is also left to the implementations to distinguish the message types from one another.
-There a various ways to achieve this, and SOIL provides no restrictions or suggestions here.
+There a various ways to achieve this, and SOIL provides no restrictions here.
 
 ### Transport layer requirements
 
@@ -269,6 +264,9 @@ The protocols and implementations to exchange messages can be freely chosen, but
 
 Due to its generic nature, a single SOIL message may grow arbitrarily big.
 The transport layer should allow the transmission of messages up to a reasonable upper limit that depends on the concrete mission requirements.
+Alternatively, it may split the binary data of messages, and recombine it on the receiver side.
+The core implementations of SOIL provide components to split large data messages into smaller parts, grouped using a request id.
+This feature may not be supported by all messages.
 
 #### Data integrity & completeness
 
