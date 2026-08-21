@@ -1,19 +1,28 @@
 # Messages
 
 SOIL defines abstract messages to exchange data between components.
-These messages may be encoded in any form, and exchanged via any communication protocol.
+These messages may be encoded in different forms, and exchanged via different communication protocols.
 Some components may send JSON messages over WebSockets, while others may communicate via custom protocols over proprietary RF links.
 
-To support these scenarios, the messages must be:
+To support these scenarios, the messages are designed to be:
 - universal (no new messages for new use cases)
 - independent (only implement required functionality)
 - primitive (few fields, low complexity)
 
-### Notes
-
 The message structures in this document are only described conceptually.
 SOIL doesn't define the exact arrangement, identification or encoding of the messages.
 Check specific implementations for details on these aspects.
+
+### Notation
+
+In this document, the following data types are used:
+- `Optional<T>`: A type that either contains a value of type `T`, or no value (e.g. `null`, `nil`, `None`)
+- `Array<T>`: An ordered list of elements of type `T`. May contain an arbitrary number of elements, including zero.
+- `Dict<K,V>`: A mapping of keys of type `K` to values of type `V`. Each key only exists once. May contain an arbitrary number of key-value pairs, and may be empty.
+- `Date`: A representation of a point in time. Includes date and time information.
+- `UInt`: An unsigned integer number. May be zero, but not negative. The allowed value range depends on the implementation.
+
+## Message types
 
 There are currently these different message types defined:
 
@@ -26,93 +35,18 @@ There are currently these different message types defined:
 | [Subscription exclusion](#subscriptions)   | Exclude a path from a subscription  |
 | [Subscription deletion](#subscriptions)    | Delete rules of a subscription      |
 
-## Core functionality
-
-At the most basic level, a SOIL component only does two things: Transmit and receive data.
-Consequently, there are only two messages required to perform these functions.
-
- > The following examples use JSON to illustrate the contents of messages,
- > but the structure of the messages also applies to other encodings.
-
-### Sending data
-
-At an abstract level, the data sent to a receiver contains:
-- The `path` of the transmitted data in the data tree
-- A list of `samples` with the timestamped values for the path
-
-A simple message would therefore look like this:
-
-```json
-{
-    "path" : ["sensor", "temperature"],
-    "samples" : [
-        {
-            "value" : 14.3,
-            "timestamp" : 1769422796.19203
-        }
-    ]
-}
-```
-
-Data messages are used to transmit new or historic values of paths.
-Single `value`s are usually transmitted based on subscriptions, or shared unrequested by a data producer.
-
-
-
-### Single value messages
-
-In most systems, the majority of transmissions will only contain a single sample,
-which merits the addition of more fields to simplify messages in those cases:
-- A `value` field at the top level for the singular value
-- An optional `timestamp` field at the top level for the timestamp of the value
-
-A single-value message can therefore be simply:
-
-```json
-{
-    "path" : ["sensor", "temperature"],
-    "value" : 14.3,
-    "timestamp" : 1769422796.19203
-}
-```
-
-If the sender of a value wants the receiver to treat the value as belonging to the current time,
-then the `timestamp` can be omitted (e.g. when a sensor has no suitable clock).
-In this case the message is simply:
-
-```json
-{
-    "path" : ["sensor", "temperature"],
-    "value" : 14.3
-}
-```
-
-### Responses
-
-In the above case the message was being sent without a request, e.g. because a sensor measured a new value.
-Data messages may also be sent as a response to some request for data, e.g. querying a database.
-In this case, the requestor may want to know which request the data messages belong to.
-We therefore add two more optional fields to data messages:
-- A `request` id that matches an id in the request that this message responds to.
-- A `count` that indicates how many total messages will be sent in response to the request.
-
-If a request includes a `request` field, then this value should be contained in the corresponding responses, if supported by the component.
-Responses to data or history requests should also include a `count` of all messages generated for the request, so that the receiving component can determine the completion of a request.
-If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
-If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
-
-### Data message
+## Data message
 
 All possible fields in a data message can be found in the following table.
 
 A value message has the following fields:
 
-| Field     | Type                      | Description                                                                   |
-|:----------|:--------------------------|:------------------------------------------------------------------------------|
-| `path`    | `Optional<Array<String>>` | The path to which the value belongs. Defaults to an empty array               |
-| `data`    | `Optional<SampleTree>`    | The data being transmitted. Defaults to an empty tree                         |
-| `request` | `Optional<Int>`           | The request id to which this message is a response                            |
-| `count`   | `Optional<Int>`           | An optional number stating the total number of responses sent for the request |
+| Field     | Type                       | Description                                                                   |
+|:----------|:---------------------------|:------------------------------------------------------------------------------|
+| `path`    | `Optional<Array<String>>`  | The path to which the value belongs. Defaults to an empty array               |
+| `data`    | `Optional<SampleTree>`     | The data being transmitted. Defaults to an empty tree                         |
+| `request` | `Optional<UInt>`           | The request id to which this message is a response                            |
+| `count`   | `Optional<UInt>`           | An optional number stating the total number of responses sent for the request |
 
 The `data` field consists of a tree, which has the following structure:
 
@@ -134,7 +68,7 @@ Some use cases may call for highly specific types, while others may just use bas
 It is recommended to keep the types as primitive as possible, to keep the complexity of the implementations low.
 There is also often no need to handle type sizes (like `Int32` or `UInt8`) within SOIL, since those are mostly restrictions for transmissions and storage, which don't apply to SOIL.
 
-### Data request message
+## Data request message
 
 The second message type is used to request data from another component.
 These requests can concern a single value, but can also target a larger section of the path tree, and are also used to query historic data.
@@ -149,20 +83,20 @@ A request message has the following fields:
 | `path`    | `Array<String>`  | The path to be requested.                                                                                         |
 | `start`   | `Optional<Date>` | The start date of the interval (exclusive). Beginning of time is assumed if omitted.                              |
 | `end`     | `Optional<Date>` | The end date of the interval (inclusive). End of time is assumed if omitted                                       |
-| `limit`   | `Optional<Int>`  | The maximum number of samples to include for each node in the tree. All matching samples are returned if omitted. |
-| `depth`   | `Optional<Int>`  | The number of levels below the path to include. All values of the sub-tree are requested if omitted.              |
-| `request` | `Optional<Int>`  | The request id to identify the response(s)                                                                        |
+| `limit`   | `Optional<UInt>` | The maximum number of samples to include for each node in the tree. All matching samples are returned if omitted. |
+| `depth`   | `Optional<UInt>` | The number of levels below the path to include. All values of the sub-tree are requested if omitted.              |
+| `request` | `Optional<UInt>` | The request id to identify the response(s)                                                                        |
 
-#### Single value requests
+### Single value requests
 
-If `depth <= 0`, then the component should only return the value for the exact `path` provided.
+If `depth == 0`, then the component should only return the value for the exact `path` provided.
 If `depth` is set to `nil`, then the full sub-tree below (and including) `path` is requested.
 If `depth` is set to a positive value, then the specified number of levels below `path` are also requested.
 If the path `a, b` is requested with a depth of `1`, then `a, b, c` should also be returned, but not `a, b, c, d`.
 
 If a `time` is specified, then the newest values at or before the given date should be returned.
 
-#### Range intervals and limiting
+### Range intervals and limiting
 
 Depending how (and if) `start` and `end` are specified, the component is expect to respond with different samples.
 In general, values are returned from `start` to `end`, until the optional `limit` is reached.
@@ -176,27 +110,24 @@ This has been choosen so that clients can continue their queries from the last a
 If the `request` field is set, then the component receiving the request should include it in all messages being sent as a response,
 including a `count` stating the number of messages being sent.
 
-#### Response order
+### Response order
 
 The components are not strictly required to respond with the samples in any particular order, and are also free to split the responses into an arbitrary number of messages.
 It is recommended to use a fixed batch size, and to sort the `samples` within the messages in the expected order (mostly from `start` to `end`).
 
-#### Request identification
+### Request identification
 
 If `request` is present in the message, then components are expected to include the same value in all responses related to this request.
 Additionally, the `count` field may be set by the components for each response, to allow the requesting component to track that all responses have been received.
 If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
 If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
+It is valid (but not advised) for `count` to increase with subsequent messages in the same request, e.g. if a component can't fully determine the number of messages in a request before starting the response.
 
 If the `request` field is present, then components should respond with at least one message.
-If no data is available for the request, then the requested path should be sent without any `value` or `samples`.
+If no data is available for the request, then the requested path should be sent without any data.
 The response may include a timestamp to indicate when the response was created.
 
-The `count` property can be set in responses to value requests if `request` is set, to indicate the total number of messages being sent.
-If `count` is supplied, then the component will consider the request completed once `count` messages have been received.
-If no `count` is supplied, then the component receiving the updates has to decide when the request is completed, e.g. after some timeout.
-
-### Data deletion message
+## Data deletion message
 
 The deletion of data is requested in almost the same way as a data request.
 
@@ -205,10 +136,10 @@ The deletion of data is requested in almost the same way as a data request.
 | `path`    | `Array<String>`  | The path to be deleted                                                                               |
 | `start`   | `Optional<Date>` | The start date of the interval (exclusive). Beginning of time is assumed if omitted.                 |
 | `end`     | `Optional<Date>` | The end date of the interval (inclusive). End of time is assumed if omitted                          |
-| `depth`   | `Optional<Int>`  | The number of levels below the path to delete. All values of the sub-tree are deleted if omitted.    |
-| `request` | `Optional<Int>`  | The request id to identify the response(s)                                                           |
+| `depth`   | `Optional<UInt>` | The number of levels below the path to delete. All values of the sub-tree are deleted if omitted.    |
+| `request` | `Optional<UInt>` | The request id to identify the response(s)                                                           |
 
-### Subscriptions
+## Subscriptions
 
 Subscriptions are an optional SOIL feature to request continous updates from components when new values at specified paths are available.
 Establishing and managing subscriptions is done with a separate set of messages, while the actual data updates use the [data messages](#data-message) defined above.
@@ -229,27 +160,29 @@ Each subscription is identified by an integer id, which can be used to update or
 
 For a more detailed description of the features, see [subscriptions](Subscriptions.md).
 
-#### Subscription rules
+### Subscription rules
 
 Both messages for inclusion and exclusion have the following fields:
 
-| Field          | Type            | Description                                                                                                 |
-|:---------------|:----------------|:------------------------------------------------------------------------------------------------------------|
-| `path`         | `Array<String>` | The path to include or exclude                                                                              |
-| `depth`        | `Optional<Int>` | The number of levels below the path to target. The full tree below the path is included/excluded if omitted |
+| Field          | Type             | Description                                                                                                 |
+|:---------------|:-----------------|:------------------------------------------------------------------------------------------------------------|
+| `path`         | `Array<String>`  | The path to include or exclude                                                                              |
+| `depth`        | `Optional<UInt>` | The number of levels below the path to target. The full tree below the path is included/excluded if omitted |
 
-#### Deleting subscriptions
+### Deleting subscription rules
 
 A subscription deletion request can be used to remove all inclusion and exclusion rules of a subscription in a subtree.
 
-| Field          | Type            | Description                                     |
-|:---------------|:----------------|:------------------------------------------------|
-| `path`         | `Array<String>` | The path for which to delete subscription rules |
-| `depth`        | `Optional<Int>` | The number of levels below the path to target. `nil` indicates that all rules at and below the path should be deleted |
+| Field          | Type             | Description                                     |
+|:---------------|:-----------------|:------------------------------------------------|
+| `path`         | `Array<String>`  | The path for which to delete subscription rules |
+| `depth`        | `Optional<UInt>` | The number of levels below the path to target. `nil` indicates that all rules at and below the path should be deleted |
 
 To completely remove all subscriptions, issue a request with an empty path (the root path) and no depth (`nil`).
 
-## Message implementations
+## Additional Notes
+
+### Message implementations
 
 Systems using SOIL are free to implement these messages however they see fit.
 Key-value based formats like [JSON](Encodings/JSON.md) and [Protobuf](Encodings/protobuf/Protobuf.md) are available, as are location-based formats (like a [binary format](Encodings/Binary.md)).
@@ -262,7 +195,7 @@ The protocols and implementations to exchange messages can be freely chosen, but
 
 #### Arbitrary message size
 
-Due to its generic nature, a single SOIL message may grow arbitrarily big.
+Due to its generic nature, a single SOIL message may grow arbitrarily large.
 The transport layer should allow the transmission of messages up to a reasonable upper limit that depends on the concrete mission requirements.
 Alternatively, it may split the binary data of messages, and recombine it on the receiver side.
 The core implementations of SOIL provide components to split large data messages into smaller parts, grouped using a request id.
