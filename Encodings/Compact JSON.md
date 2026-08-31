@@ -15,14 +15,14 @@ The following table explains how the regular JSON field names are translated to 
 | JSON Field    | Compact name | Comment                                                           |
 |:--------------|:-------------|:------------------------------------------------------------------|
 | `children`    | `n`          | `n` is derived from `nodes`, since `c` is already used by `count` |
-| `count`       | `m`          |                                                                   |
+| `count`       | `c`          |                                                                   |
 | `depth`       | `d`          |                                                                   |
 | `end`         | `e`          |                                                                   |
-| `id`          | `m`          |                                                                   |
+| `id`          | `i`          |                                                                   |
 | `message`     | `m`          |                                                                   |
 | `path`        | `p`          |                                                                   |
-| `samples`     | `m`          |                                                                   |
-| `time`        | `m`          |                                                                   |
+| `samples`     | `s`          |                                                                   |
+| `time`        | `t`          |                                                                   |
 | `type`        | `h`          | `h` is derived from `hint`, since `t` is already used by `time`   |
 | `value`       | `v`          |                                                                   |
 
