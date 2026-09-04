@@ -242,6 +242,15 @@ The `type` field is used only in connection with the `value` field, and identifi
 The `type` field is necessary to signal SOIL `Integer` and `Data` types, for all other types it is optional.
 It can only appear without a `value` field, if `type` is set to the JSON `null` value.
 
+| SOIL Type | JSON Type   |
+|:----------|:------------|
+| Null      | `null`      |
+| Integer   | `"integer"` |
+| Double    | `"double"`  |
+| String    | `"string"`  |
+| Data      | `"data"`    |
+| Path      | `"path"`    |
+
 Example:
 
 ```json
