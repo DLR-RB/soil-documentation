@@ -51,3 +51,5 @@ The value type is also transmitted as an integer:
 | String    | `"string"`  | `3`           |
 | Data      | `"data"`    | `4`           |
 | Path      | `"path"`    | `5`           |
+| List      | `"list"`    | `6`           |
+| Map       | `"map"`     | `7`           |

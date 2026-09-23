@@ -28,6 +28,29 @@ message PbPath {
     repeated string components = 1;
 }
 
+// A sample value, identical to the definition in PbSample, used in PbList and PbMap
+message PbValue {
+    oneof value {
+        sint64 integer = 2;
+        double double = 3;
+        string string = 4;
+        bytes data = 5;
+        PbPath path = 6;
+        PbList list = 7;
+        PbMap map = 8;
+    }
+}
+
+// A list of recursively nested values
+message PbList {
+    repeated PbValue values = 1;
+}
+
+// A map of string keys to recursively nested values
+message PbMap {
+    map<string, PbValue> values = 1;
+}
+
 // A sample assigned to a tree node
 message PbSample {
 
@@ -50,6 +73,12 @@ message PbSample {
 
         // A path value
         PbPath path = 6;
+
+        // A list value
+        PbList list = 7;
+
+        // A map value
+        PbMap map = 8;
     }
 }
 

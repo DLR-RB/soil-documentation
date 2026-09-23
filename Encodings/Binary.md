@@ -102,25 +102,29 @@ It will thus rarely be needed, shrinking the header in most cases to a single by
 
 The `VALUE` field is only used for [samples](#sample) in [data messages](#data-message).
 
-| SOIL Type | [`VALUE_TYPE`](#value-type) | Encoding                                            |
-|:----------|:----------------------------|:----------------------------------------------------|
-| Null      | `0`                         | No data                                             |
-| Integer   | `1`                         | [ZigZag VarInt](#zigzag-varint)                     |
-| Double    | `2`                         | 64-bit IEEE double, big endian                      |
-| String    | `3`                         | length as [VarInt](#varint) + UTF-8                 |
-| Data      | `4`                         | length as [VarInt](#varint) + bytes                 |
-| Path      | `5`                         | count as [VarInt](#varint) + components as `STRING` |
+| SOIL Type | [`VALUE_TYPE`](#value-type) | Encoding                                                           |
+|:----------|:----------------------------|:-------------------------------------------------------------------|
+| Null      | `0`                         | No data                                                            |
+| Integer   | `1`                         | [ZigZag VarInt](#zigzag-varint)                                    |
+| Double    | `2`                         | 64-bit IEEE double, big endian                                     |
+| String    | `3`                         | length as [VarInt](#varint) + UTF-8                                |
+| Data      | `4`                         | length as [VarInt](#varint) + bytes                                |
+| Path      | `5`                         | count as [VarInt](#varint) + components as `STRING`                |
+| List      | `6`                         | count as [VarInt](#varint) + components as `TYPE + VALUE`          |
+| Map       | `7`                         | count as [VarInt](#varint) + components as `STRING + TYPE + VALUE` |
 
 Examples:
 
-| Value             | Encoding (excluding `VALUE_TYPE`) |
-|:------------------|:----------------------------------|
-| Null              | *No data*                         |
-| `123` (Integer)   | `F6 01`                           |
-| `3.14`(Double)    | `40 09 1E B8 51 EB 85 1F`         |
-| `"abc"` (String)  | `03 61 62 63`                     |
-| `0xABBA` (Data)   | `02 AB BA`                        |
-| `"a", "b"` (Path) | `02 01 61 01 62`                  |
+| Value                 | Encoding (excluding `VALUE_TYPE`) |
+|:----------------------|:----------------------------------|
+| Null                  | *No data*                         |
+| `123` (Integer)       | `F6 01`                           |
+| `3.14`(Double)        | `40 09 1E B8 51 EB 85 1F`         |
+| `"abc"` (String)      | `03 61 62 63`                     |
+| `0xABBA` (Data)       | `02 AB BA`                        |
+| `"a", "b"` (Path)     | `02 01 61 01 62`                  |
+| `["a", 123]` (List)   | `02 03 01 61 01 F6 01`            |
+| `{ "a" : 123 }` (Map) | `01 03 01 61 01 F6 01`            |
 
 ### Timestamp
 

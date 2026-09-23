@@ -18,7 +18,7 @@ Check specific implementations for details on these aspects.
 In this document, the following data types are used:
 - `Optional<T>`: A type that either contains a value of type `T`, or no value (e.g. `null`, `nil`, `None`)
 - `Array<T>`: An ordered list of elements of type `T`. May contain an arbitrary number of elements, including zero.
-- `Dict<K,V>`: A mapping of keys of type `K` to values of type `V`. Each key only exists once. May contain an arbitrary number of key-value pairs, and may be empty.
+- `Map<K,V>`: A mapping of keys of type `K` to values of type `V`. Each key only exists once. May contain an arbitrary number of key-value pairs, and may be empty.
 - `Date`: A representation of a point in time. Includes date and time information.
 - `UInt`: An unsigned integer number. May be zero, but not negative. The allowed value range depends on the implementation.
 
@@ -48,25 +48,7 @@ A value message has the following fields:
 | `request` | `Optional<UInt>`           | The request id to which this message is a response                            |
 | `count`   | `Optional<UInt>`           | An optional number stating the total number of responses sent for the request |
 
-The `data` field consists of a tree, which has the following structure:
-
-| Field      | Type                                | Description                                                                                              |
-|:-----------|:------------------------------------|:---------------------------------------------------------------------------------------------------------|
-| `samples`  | `Optional<Array<Sample>>`           | The samples at this node. Defaults to an empty array                                                     |
-| `children` | `Optional<Dict<String, SampleTree>` | The child nodes below this node, indexed by their name (path component). Defaults to an empty dictionary |
-
-Note that each child is again defined as a `SampleTree`, creating a recursive structure with an arbitrary number of levels.
-The `samples` of each tree node consist of an array of `Sample` objects, with the following fields:
-
-| Field     | Type              | Description                                                 |
-|:----------|:------------------|:------------------------------------------------------------|
-| `value`   | `Optional<Value>` | The value associated with the sample.                       |
-| `time`    | `Optional<Date>`  | The timestamp of the `value`. Defaults to the current time. |
-
-Note that `value` has the unspecified type `Value`. The abstract SOIL concept does not specify which types of values the system handles.
-Some use cases may call for highly specific types, while others may just use basic types like integers, doubles, and strings.
-It is recommended to keep the types as primitive as possible, to keep the complexity of the implementations low.
-There is also often no need to handle type sizes (like `Int32` or `UInt8`) within SOIL, since those are mostly restrictions for transmissions and storage, which don't apply to SOIL.
+The `data` field consists of a sample tree, as defined in the [Data Model](Model.md).
 
 ## Data request message
 

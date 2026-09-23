@@ -105,6 +105,8 @@ message PbSample {
         string string = 4;
         bytes data = 5;
         PbPath path = 6;
+        PbList list = 7;
+        PbMap map = 8;
     }
 }
 ```
