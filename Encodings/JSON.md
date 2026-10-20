@@ -209,16 +209,16 @@ It contains a value associated with the path specified in the [`path`](#path) fi
 The SOIL type of the contained value may be further specified with the [`type`](#value-type) field.
 JSON types are mapped to SOIL types in the following way:
 
-| SOIL Type | JSON Type           | [`type`](#value-type)      | Comment                                     |
-|:----------|:--------------------|:---------------------------|:--------------------------------------------|
-| Null      | null                | omitted, or `null`         |                                             |
-| Integer   | Number              | `"integer"`                |                                             |
-| Double    | Number              | omitted, or `"double"`     |                                             |
-| String    | Text                | omitted, or `"string"`     |                                             |
-| Data      | Text                | `"data"`                   | String must contain base64-encoded data     |
-| Path      | Text or Array<Text> | omitted, or `"path"`       | Text can be used for single component paths |
-| List      | Array<Object>       | `"list"`                   | See [List](#list)                           |
-| Map       | Array<Object>       | `"map"`                    | See [Map](#map)                             |
+| SOIL Type | JSON Type               | [`type`](#value-type)      | Comment                                     |
+|:----------|:------------------------|:---------------------------|:--------------------------------------------|
+| Null      | `null`                  | omitted, or `null`         |                                             |
+| Integer   | `Number`                | `"integer"`                |                                             |
+| Double    | `Number`                | omitted, or `"double"`     |                                             |
+| String    | `Text`                  | omitted, or `"string"`     |                                             |
+| Data      | `Text`                  | `"data"`                   | String must contain base64-encoded data     |
+| Path      | `Text` or `Array<Text>` | omitted, or `"path"`       | Text can be used for single component paths |
+| List      | `Array<Object>`         | `"list"`                   | See [List](#list)                           |
+| Map       | `Array<Object>`         | `"map"`                    | See [Map](#map)                             |
 
 The value field can be used if only a single value/sample is transmitted for the path specified in the message.
 It is permitted to transmit additional values using the [`samples`](#samples) field, or to only use the `samples` field.
