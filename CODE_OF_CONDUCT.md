@@ -40,7 +40,7 @@ Examples of unacceptable behavior include:
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-[https://github.com/DLR-RB/soil-core-swift/issues](https://github.com/DLR-RB/soil-core-swift/issues).
+[https://github.com/DLR-RB/soil-documentation/issues](https://github.com/DLR-RB/soil-documentation/issues).
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
