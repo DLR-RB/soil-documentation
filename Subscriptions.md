@@ -3,13 +3,14 @@
 The concept of requesting data of interest from components can be described as "hierarchical subscriptions with scoped exclusions".
 Components in the network can subscribe to paths in order to receive updates when the data changes.
 Additionally, clients can unsubscribe from paths, to exclude specific updates from existing subscriptions.
+It's also possible to remove subscription rules.
 With this mechanism, components can build complex include/exclude rules to manage the updates they want to receive.
 
  > For brevity, all paths in this document are abbreviated using `.`, e.g. `a.b` represents the path `["a", "b"]`.
 
 ## Creating subscriptions
 
-Subscriptions are created by sending an `inclusion` or `exclusion` request to a component with a new subscription id.
+Subscriptions are created by sending an `inclusion` or `exclusion` request to a component.
 
 ### Inclusions
 
@@ -22,6 +23,11 @@ A subscriber will not receive updates outside of the inclusion, e.g. for `a`, `a
 Conversely, exclusions specify which paths to ignore for the subscription.
 The mechanism works similar to inclusions.
 If a component includes `a`, but excludes `a.b`, then it will receive updates for `a`, and `a.c`, but not for `a.b` or `a.b.c`.
+
+## Rule deletion
+
+It's possible to delete subscription rules that are no longer needed, by sending a `clear` request.
+A rule deletion request removes all inclusion and exclusion rules for the specified paths and depth.
 
 ### Subscription depth
 
@@ -50,3 +56,5 @@ Other messages are only sent when new data arrives.
 
 The current values at the time of the subscription will not be transmitted automatically, but can be requested separately (note that exclusions are not considered when requesting trees).
 
+
+TODO: Describe rule deletion
