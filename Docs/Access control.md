@@ -1,5 +1,7 @@
 # Access control
 
+TODO: Include data deletion
+
 `SOIL` is capable of simple but powerful access control mechanisms due to the tree structure of the data.
 
 The main philosophy of access restrictions is:
