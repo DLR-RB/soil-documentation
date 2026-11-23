@@ -185,7 +185,7 @@ The `path` field is used for all six message types:
 | [Subscription exclusion](#subscription-exclusion-message) | The path to the root node of the tree to unsubscribe from                    |
 | [Subscription deletion](#subscription-deletion-message)   | The path to the root node of the tree for which to delete subscription rules |
 
-The field is named `"path"` and expects a JSON list of text values.
+The field is named `"path"` and expects a JSON list of text values, or a single string.
 This field is optional. If the field is not present in a message, then an empty path is assumed.
 
 Example:
@@ -193,6 +193,14 @@ Example:
 ```json
 {
     "path": ["path", "of", "data"]
+}
+```
+
+Single-component paths can also be transmitted as a plain string:
+
+```json
+{
+    "path": "single"
 }
 ```
 
@@ -213,7 +221,7 @@ JSON types are mapped to SOIL types in the following way:
 |:----------|:------------------------|:---------------------------|:--------------------------------------------|
 | Null      | `null`                  | omitted, or `null`         |                                             |
 | Integer   | `Number`                | `"integer"`                |                                             |
-| Double    | `Number`                | omitted, or `"double"`     |                                             |
+| Double    | `Number` or `Text`      | omitted, or `"double"`     | Only non-finite numbers are represented as text: `"nan"`, `"-inf"`, and `"inf"` |
 | String    | `Text`                  | omitted, or `"string"`     |                                             |
 | Data      | `Text`                  | `"data"`                   | String must contain base64-encoded data     |
 | Path      | `Text` or `Array<Text>` | omitted, or `"path"`       | Text can be used for single component paths |
@@ -240,6 +248,8 @@ while the value is the encoded value (see [Value](#value)).
 
 Example:
 
+The list `[Int(123), Path("a", "b")]` is represented as:
+
 ```json
 {
     "value": [
@@ -249,19 +259,25 @@ Example:
 }
 ```
 
+Note that `null` values are represented as `"null", null`.
+
 #### Map
 
 Maps are encoded using an array of (key, type, value) triplets.
 The key is a string, `type` is the [value type string](#value-type), and `value` is the encoded [Value](#value).
 
+The map `{ "abc" -> Int(123), "def" -> String("something") }` is represented as:
+
 ```json
 {
     "value": [
         "abc", "integer", 123,
-        "def", "list", ["string", "something"]
+        "def", "string", "something"
     ]
 }
 ```
+
+Note that `null` values are represented as `"null", null`.
 
 ### Value Type
 
@@ -272,19 +288,21 @@ The key is a string, `type` is the [value type string](#value-type), and `value`
 | Default value | N/A      |
 
 The `type` field is used only in connection with the `value` field, and identifies the type of the `value` field.
-The `type` field is necessary to signal SOIL `Integer` and `Data` types, for all other types it is optional.
+The `type` field is necessary to signal SOIL `Integer`, `Data`, `List` and `Map` types, for all other types it is optional.
 It can only appear without a `value` field, if `type` is set to the JSON `null` value.
 
-| SOIL Type | JSON Type   |
-|:----------|:------------|
-| Null      | `null`      |
-| Integer   | `"integer"` |
-| Double    | `"double"`  |
-| String    | `"string"`  |
-| Data      | `"data"`    |
-| Path      | `"path"`    |
-| List      | `"list"`    |
-| Map       | `"map"`     |
+| SOIL Type | JSON Type   | Required |
+|:----------|:------------|:---------|
+| Null      | `null`      | no       |
+| Integer   | `"integer"` | yes      |
+| Double    | `"double"`  | no       |
+| String    | `"string"`  | no       |
+| Data      | `"data"`    | yes      |
+| Path      | `"path"`    | no       |
+| List      | `"list"`    | yes      |
+| Map       | `"map"`     | yes      |
+
+The value type is also used in [`List`](#list) and [`Map`](#map) representations, where it is always required.
 
 Example:
 
