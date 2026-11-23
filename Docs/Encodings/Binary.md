@@ -1,6 +1,6 @@
 # JSON Encoding
 
-This document describes the binary encoding format defined in the SOIL core libraries.
+This document describes the binary encoding format implemented in the SOIL core libraries.
 
 ### Table of contents
 

@@ -1,6 +1,6 @@
 # JSON Encoding
 
-This document describes the compact JSON encoding format defined in the SOIL core libraries.
+This document describes the compact JSON encoding format implemented in the SOIL core libraries.
 
 ## Structure
 

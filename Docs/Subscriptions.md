@@ -35,6 +35,7 @@ It's possible to specify a `depth` for inclusions and exclusions, which will lim
 A component including `a` with `depth = 1` will receive updates to `a`, `a.b`, and `a.c`, but not for `a.b.c`.
 A depth of `0` will only target the exact path, but no sub-elements of it.
 If no depth is specified, then the whole sub-tree of the path will be considered.
+The same rule applies for exlusions, and for removing rules.
 
 ### Composing subscriptions
 
@@ -55,6 +56,3 @@ in which case it sends an empty value message with the received path and request
 Other messages are only sent when new data arrives.
 
 The current values at the time of the subscription will not be transmitted automatically, but can be requested separately (note that exclusions are not considered when requesting trees).
-
-
-TODO: Describe rule deletion
