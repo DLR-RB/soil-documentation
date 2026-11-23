@@ -46,7 +46,7 @@ A single temperature could therefore be transmitted by the sensor as:
 }
 ```
 
-The message above is already a valid SOIL message in [JSON format](Encodings/JSON.md), allowing the sensor to send data into a SOIL system.
+The message above is already a valid SOIL message in [JSON format](Docs/Encodings/JSON.md), allowing the sensor to send data into a SOIL system.
 While the message contains only data for a single node in the data tree, it's also possible to send complex data structures, with different primitive types.
 
 In addition to just sending data, it's also possible to request and delete data, and to subscribe to updates.
@@ -87,16 +87,16 @@ This rigidity is often enforced in code or configuration, e.g. by only reading c
 
 #### Important terminology
 
-A brief description of the core terms can be found in the [glossary](Glossary.md).
+A brief description of the core terms can be found in the [glossary](Docs/Glossary.md).
 
 #### Frequently asked questions
 
-There is a living document to answer some common questions in the [FAQ](FAQ.md), which also explains some design decisions.
+There is a living document to answer some common questions in the [FAQ](Docs/FAQ.md), which also explains some design decisions.
 
 #### Subscriptions
 
 An important mechanism of `SOIL` is the possibility to request updates from other components when new data is available.
-This subscription system is further explained [here](Subscriptions.md).
+This subscription system is further explained [here](Docs/Subscriptions.md).
 
 #### Communication
 
@@ -118,17 +118,17 @@ There are currently six different message types defined:
   - Exclusion: Exclude a tree from a subscription
   - Deletion: Delete previous rules of a subscription
 
-These messages are described in more detail in [Messages.md](Messages.md).
+These messages are described in more detail in [Messages.md](Docs/Messages.md).
 
 ### Encodings
 
 There are a few standardizes message encodings available for SOIL.
-These are described in [Encodings](Encodings/Readme.md).
+These are described in [Encodings](Docs/Encodings/Readme.md).
 
 #### Access control
 
-The main principles and recommendations for access control are compiled [here](Access%20control.md).
+The main principles and recommendations for access control are compiled [here](Docs/Access%20control.md).
 
 #### Security considerations
 
-A short summary of security concepts and attacks related to SOIL can be found in [Security.md](Security.md).
+A short summary of security concepts and attacks related to SOIL can be found in [Security.md](Docs/Security.md).
